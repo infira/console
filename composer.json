@@ -1,0 +1,22 @@
+{
+  "name": "infira/console",
+  "autoload": {
+	"psr-4": {
+	  "Infira\\console\\": "src/"
+	}
+  },
+  "minimum-stability": "dev",
+  "authors": [
+	{
+	  "name": "Gen Taliar",
+	  "email": "gen@infira.ee"
+	}
+  ],
+  "require": {
+	"php": "^7.3|^8.0",
+	"symfony/yaml": "5.*",
+	"symfony/console": "5.*",
+	"symfony/process": "5.*",
+	"infira/utils": "2.*"
+  }
+}
