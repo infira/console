@@ -17,6 +17,7 @@
 	"symfony/yaml": "5.*",
 	"symfony/console": "5.*",
 	"symfony/process": "5.*",
-	"infira/utils": "2.*"
+	"infira/utils": "2.*",
+	"infira/errorhandler": "1.*"
   }
 }
