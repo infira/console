@@ -10,7 +10,7 @@ use Infira\console\helper\Config;
 abstract class Command extends \Symfony\Component\Console\Command\Command
 {
 	/**
-	 * @var \Infira\omg\helper\ConsoleOutput
+	 * @var \Infira\console\ConsoleOutput
 	 */
 	public $output;
 	/**

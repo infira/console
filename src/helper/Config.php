@@ -19,7 +19,7 @@ class Config
 	{
 		if (!file_exists($yamlFile))
 		{
-			throw new Exception("yaml config $yamlFile does not exist");
+			throw new Exception("yaml config('$yamlFile') does not exist");
 		}
 		$this->config = array_merge($this->config, Yaml::parseFile($yamlFile));
 	}

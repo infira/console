@@ -1,75 +1,94 @@
 <?php
 
-class Bin
-{
+namespace Infira\console;
 
-}
-
-
-use Symfony\Component\Console\Output\ConsoleOutput;
+use Infira\Error\Handler;
 use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Input\ArgvInput;
-use Infira\Error\Handler;
-use Infira\pmg\Pmg;
+use Infira\Error\Error;
+use Infira\Utils\Dir;
 
-if (file_exists(__DIR__ . '/../../../autoload.php'))
+class Bin
 {
-	require __DIR__ . '/../../../autoload.php';
-}
-else
-{
-	require __DIR__ . '/../vendor/autoload.php';
-}
-
-function br2nl(string $str)
-{
-	return str_replace(['<br />', '<br>', '< br>'], "\n", $str);
-}
-
-define("PMG_PATH", realpath(__DIR__ . '/../') . '/');
-
-$out     = new ConsoleOutput();
-$Handler = new Handler([
-	"errorLevel"           => -1,//-1 means all erors, see https://www.php.net/manual/en/function.error-reporting.php
-	"env"                  => "dev", //dev,stable (stable env does not display full errors erros
-	"debugBacktraceOption" => DEBUG_BACKTRACE_IGNORE_ARGS,
-]);
-
-
-try
-{
-	$pmg = new Pmg();
-	$app = new Application('poesis-mg');
-	$app->add($pmg);
-	$app->setDefaultCommand($pmg->getName());
-	$app->setCatchExceptions(false);
-	$input = new ArgvInput();
-	$app->run($input, new \Infira\pmg\helper\ConsoleOutput($input));
-}
-catch (\Infira\Error\Error $e)
-{
-	debug($e->getStack()->extra);
-	$out->writeln("General error: <error>" . br2nl($e->getMessage()) . "</error>");
-	$out->writeln('<info>Trace</info>');
-	foreach ($e->getStackTrace() as $key => $row)
+	private static $basePath = '';
+	/**
+	 * @var ConsoleOutput
+	 */
+	private static $output;
+	
+	/**
+	 * @var Handler
+	 */
+	private static $eh;
+	
+	public static function init(string $basePath)
 	{
-		$key++;
-		$row['file'] = $row['file'] ?? '';
-		$row['line'] = $row['line'] ?? '';
-		$out->writeln($key . ') in file <info>' . $row['file'] . ' on line <info>' . $row['line'] . '</info>');
+		self::$basePath = $basePath;
 	}
-}
-catch (Throwable $e)
-{
-	$ie = $Handler->catch($e);
-	debug($ie->getStack()->extra);
-	$out->writeln("General error: <error>" . br2nl($ie->getMessage()) . "</error>");
-	$out->writeln('<info>Trace</info>');
-	foreach ($ie->getStackTrace() as $key => $row)
+	
+	public static function getPath(string $path = null): string
 	{
-		$key++;
-		$row['file'] = $row['file'] ?? '';
-		$row['line'] = $row['line'] ?? '';
-		$out->writeln($key . ') in file <info>' . $row['file'] . ' on line <info>' . $row['line'] . '</info>');
+		$extra = $path ? $path : '';
+		
+		return Dir::fixPath(realpath(self::$basePath) . '/' . $extra);
+	}
+	
+	
+	public static function run(string $appName, callable $middleware)
+	{
+		self::$eh = new Handler([
+			"errorLevel"           => -1,//-1 means all erors, see https://www.php.net/manual/en/function.error-reporting.php
+			"env"                  => "dev", //dev,stable (stable env does not display full errors erros
+			"debugBacktraceOption" => DEBUG_BACKTRACE_IGNORE_ARGS,
+		]);
+		try
+		{
+			$input        = new ArgvInput();
+			self::$output = new ConsoleOutput($input);
+			$app          = new Application('poesis-mg');
+			$middleware($app);
+			$app->setCatchExceptions(false);
+			$app->run($input, self::$output);
+			self::$output->info('command finished successfuly');
+		}
+		catch (Error $e)
+		{
+			self::handleThrowable($e);
+		}
+		catch (\Throwable $e)
+		{
+			self::handleThrowable($e);
+		}
+	}
+	
+	private static function handleThrowable(object $e)
+	{
+		if (!($e instanceof Error))
+		{
+			$e = self::$eh->catch($e);
+		}
+		self::$output->error($e->getMessage());
+		$extra = $e->getStack()->extra ?: [];
+		if ($extra)
+		{
+			self::$output->region('Extra', function () use (&$extra)
+			{
+				self::$output->dumpArray($extra);
+			});
+		}
+		$trace = $e->getStackTrace();
+		if ($trace)
+		{
+			self::$output->nl()->region('trace', function () use (&$trace)
+			{
+				foreach ($trace as $key => $row)
+				{
+					$key++;
+					$row['file'] = $row['file'] ?? '';
+					$row['line'] = $row['line'] ?? '';
+					self::$output->writeln($key . ') in file <info>' . $row['file'] . ' </info> on line ' . $row['line']);
+				}
+			});
+		}
 	}
 }
