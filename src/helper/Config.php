@@ -12,7 +12,16 @@ class Config
 	
 	public function __construct(string $yamlFile)
 	{
-		$this->config = Yaml::parseFile($yamlFile);
+		$this->mergeConfig($yamlFile);
+	}
+	
+	public function mergeConfig(string $yamlFile)
+	{
+		if (!file_exists($yamlFile))
+		{
+			throw new Exception("yaml config $yamlFile does not exist");
+		}
+		$this->config = array_merge($this->config, Yaml::parseFile($yamlFile));
 	}
 	
 	protected function getPathArr(string $configPath): array

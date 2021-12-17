@@ -91,10 +91,6 @@ abstract class Command extends \Symfony\Component\Console\Command\Command
 	
 	protected function loadConfig(string $yamlFile)
 	{
-		if (!file_exists($yamlFile))
-		{
-			$this->error('Config files does not exist');
-		}
 		$this->config = new Config($yamlFile);
 	}
 	
