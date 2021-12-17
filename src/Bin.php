@@ -23,14 +23,14 @@ class Bin
 	
 	public static function init(string $basePath)
 	{
-		self::$basePath = $basePath;
+		self::$basePath = Dir::fixPath(realpath($basePath));
 	}
 	
 	public static function getPath(string $path = null): string
 	{
-		$extra = $path ? $path : '';
+		$extra = $path ?: '';
 		
-		return Dir::fixPath(realpath(self::$basePath) . '/' . $extra);
+		return Dir::fixPath(realpath(self::$basePath . $extra));
 	}
 	
 	
