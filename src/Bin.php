@@ -45,7 +45,7 @@ class Bin
 		{
 			$input        = new ArgvInput();
 			self::$output = new ConsoleOutput($input);
-			$app          = new Application('poesis-mg');
+			$app          = new Application($appName);
 			$middleware($app);
 			$app->setCatchExceptions(false);
 			$app->run($input, self::$output);
