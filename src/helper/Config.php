@@ -58,7 +58,7 @@ class Config
 		return true;
 	}
 	
-	protected function set(string $configPath, $value)
+	public function set(string $configPath, $value)
 	{
 		$to    = &$this->config;
 		$lastP = null;
@@ -74,7 +74,7 @@ class Config
 		$to[$lastP] = $value;
 	}
 	
-	protected function add(string $configPath, $value)
+	public function add(string $configPath, $value)
 	{
 		$to    = &$this->config;
 		$lastP = null;
