@@ -5,6 +5,7 @@ namespace Infira\console;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Process\Process;
+use Infira\console\helper\Config;
 
 abstract class Command extends \Symfony\Component\Console\Command\Command
 {
@@ -16,6 +17,11 @@ abstract class Command extends \Symfony\Component\Console\Command\Command
 	 * @var InputInterface
 	 */
 	protected $input;
+	
+	/**
+	 * @var Config
+	 */
+	protected $config;
 	
 	/**
 	 * @param InputInterface  $input
@@ -81,6 +87,15 @@ abstract class Command extends \Symfony\Component\Console\Command\Command
 	protected function success(): int
 	{
 		return \Symfony\Component\Console\Command\Command::SUCCESS;
+	}
+	
+	protected function loadConfig(string $yamlFile)
+	{
+		if (!file_exists($yamlFile))
+		{
+			$this->error('Config files does not exist');
+		}
+		$this->config = new Config($yamlFile);
 	}
 	
 	protected function beforeExecute() {}
