@@ -3,7 +3,6 @@
 namespace Infira\console\helper;
 
 use Symfony\Component\Yaml\Yaml;
-use stdClass;
 use Exception;
 
 class Config
@@ -27,6 +26,11 @@ class Config
 	protected function getPathArr(string $configPath): array
 	{
 		return explode('.', $configPath);;
+	}
+	
+	public function getAll(): array
+	{
+		return $this->config;
 	}
 	
 	public function get(string $configPath)
@@ -60,33 +64,41 @@ class Config
 	
 	public function set(string $configPath, $value)
 	{
-		$to    = &$this->config;
-		$lastP = null;
-		foreach ($this->getPathArr($configPath) as $p)
+		$to      = &$this->config;
+		$pathArr = $this->getPathArr($configPath);
+		$lastKey = array_key_last($pathArr);
+		foreach ($pathArr as $key => $p)
 		{
 			if (!array_key_exists($p, $to))
 			{
-				$to[$p] = new stdClass();
+				$to[$p] = [];
 			}
-			$to    = &$to[$p];
-			$lastP = $p;
+			if ($key == $lastKey)
+			{
+				$to[$p] = $value;
+				break;
+			}
+			$to = &$to[$p];
 		}
-		$to[$lastP] = $value;
 	}
 	
 	public function add(string $configPath, $value)
 	{
-		$to    = &$this->config;
-		$lastP = null;
-		foreach ($this->getPathArr($configPath) as $p)
+		$to      = &$this->config;
+		$pathArr = $this->getPathArr($configPath);
+		$lastKey = array_key_last($pathArr);
+		foreach ($pathArr as $key => $p)
 		{
-			if (!property_exists($to, $p))
+			if (!array_key_exists($p, $to))
 			{
-				$to[$p] = new stdClass();
+				$to[$p] = [];
 			}
-			$to    = &$to[$p];
-			$lastP = $p;
+			if ($key == $lastKey)
+			{
+				$to[$p][] = $value;
+				break;
+			}
+			$to = &$to[$p];
 		}
-		$to[$lastP][] = $value;
 	}
 }
