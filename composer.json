@@ -18,6 +18,7 @@
 	"symfony/console": "5.*",
 	"symfony/process": "5.*",
 	"infira/utils": "2.*",
-	"infira/errorhandler": "1.*"
+	"infira/errorhandler": "1.*",
+	"illuminate/support": "8.x-dev"
   }
 }
