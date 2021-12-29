@@ -67,7 +67,7 @@ class Utils
 		return $type;
 	}
 	
-	public static function makePhpTypes(string $typeStr, bool $extractClassName): array
+	public static function makePhpTypes(string $typeStr, bool $extractClassName, bool $callable = false): array
 	{
 		$typeStr = trim($typeStr);
 		$types   = [];
@@ -79,9 +79,15 @@ class Utils
 		if ($typeStr[0] == '\\') {
 			$types[] = 'array';
 			$types[] = '\stdClass';
+			if ($callable) {
+				$types[] = 'callable';
+			}
 			$types[] = $extractClassName ? self::extractName($typeStr) : $typeStr;
 		}
 		else {
+			if ($callable) {
+				$types[] = 'callable';
+			}
 			$types[] = self::toPhpType($typeStr);
 		}
 		
