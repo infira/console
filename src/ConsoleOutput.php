@@ -8,6 +8,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Infira\Utils\Variable;
 use Symfony\Component\Console\Formatter\OutputFormatterStyle;
+use Infira\console\helper\Output;
 
 class ConsoleOutput extends \Symfony\Component\Console\Output\ConsoleOutput
 {
@@ -21,46 +22,44 @@ class ConsoleOutput extends \Symfony\Component\Console\Output\ConsoleOutput
 	 */
 	private $globalPrefix = '';
 	
-	private $titleSection = '';
-	
 	public function __construct($input, int $verbosity = OutputInterface::VERBOSITY_NORMAL, bool $decorated = null, OutputFormatterInterface $formatter = null)
 	{
-		\Symfony\Component\Console\Output\ConsoleOutput::__construct($verbosity, $decorated, $formatter);
+		parent::__construct($verbosity, $decorated, $formatter);
 		$this->style = new SymfonyStyle($input, $this);
 		
 		$outputStyle = new OutputFormatterStyle('magenta');
 		$this->getFormatter()->setStyle('title', $outputStyle);
 	}
 	
-	public function info(string $msg): ConsoleOutput
+	public function info(string $msg): self
 	{
 		$this->say("<info>$msg</info>");
 		
 		return $this;
 	}
 	
-	public function title(string $msg): ConsoleOutput
+	public function title(string $msg): self
 	{
 		$this->say("<title>$msg</title>");
 		
 		return $this;
 	}
 	
-	public function comment(string $msg): ConsoleOutput
+	public function comment(string $msg): self
 	{
 		$this->say("<comment>$msg</comment>");
 		
 		return $this;
 	}
 	
-	public function msg(string $msg): ConsoleOutput
+	public function msg(string $msg): self
 	{
 		$this->say($msg);
 		
 		return $this;
 	}
 	
-	public function nl(): ConsoleOutput
+	public function nl(): self
 	{
 		$gp                 = $this->globalPrefix;
 		$this->globalPrefix = '';
@@ -71,7 +70,7 @@ class ConsoleOutput extends \Symfony\Component\Console\Output\ConsoleOutput
 		return $this;
 	}
 	
-	public function cl(): ConsoleOutput
+	public function cl(): self
 	{
 		$gp                 = $this->globalPrefix;
 		$this->globalPrefix = '';
@@ -83,37 +82,36 @@ class ConsoleOutput extends \Symfony\Component\Console\Output\ConsoleOutput
 		return $this;
 	}
 	
-	public function error(string $msg): ConsoleOutput
+	public function error(string $msg): self
 	{
 		$this->style->error($msg);
 		
 		return $this;
 	}
 	
-	public function say(string $message)
+	public function say(string $message): self
 	{
 		$ex = preg_split('/\r\n|\r|\n/', $message);
 		array_map(function ($line, $key)
 		{
 			$line     = trim($line);
 			$origLine = $line;
-			if (strlen($line) > 0)
-			{
+			if (strlen($line) > 0) {
 				$line = str_replace('<nl/>', '', $line);
 				$this->writeln($line);
-				if (str_contains($origLine, '<nl/>'))
-				{
+				if (str_contains($origLine, '<nl/>')) {
 					$this->nl();
 				}
 			}
 		}, $ex, array_keys($ex));
+		
+		return $this;
 	}
 	
-	public function sayWho(string $msg, string $saysWho)
+	public function sayWho(string $msg, string $saysWho): self
 	{
-		$msg = $this->into1Line($msg);
-		if (!$msg)
-		{
+		$msg = Output::into1Line($msg);
+		if (!$msg) {
 			return $this;
 		}
 		
@@ -126,14 +124,12 @@ class ConsoleOutput extends \Symfony\Component\Console\Output\ConsoleOutput
 		return $this;
 	}
 	
-	public function write($messages, bool $newline = false, int $options = self::OUTPUT_NORMAL): ConsoleOutput
+	public function write($messages, bool $newline = false, int $options = self::OUTPUT_NORMAL): self
 	{
-		if (!is_iterable($messages))
-		{
+		if (!is_iterable($messages)) {
 			$messages = [$messages];
 		}
-		foreach ($messages as $k => $message)
-		{
+		foreach ($messages as $k => $message) {
 			$messages[$k] = $this->globalPrefix ? $this->globalPrefix . $message : $message;
 		}
 		parent::write($messages, $newline, $options);
@@ -141,7 +137,7 @@ class ConsoleOutput extends \Symfony\Component\Console\Output\ConsoleOutput
 		return $this;
 	}
 	
-	public function region(string $region, callable $regionProcess)
+	public function region(string $region, callable $regionProcess): self
 	{
 		$msg = str_repeat("=", 25);
 		$msg .= "[<question> $region </question>]";
@@ -151,34 +147,15 @@ class ConsoleOutput extends \Symfony\Component\Console\Output\ConsoleOutput
 		$regionProcess();
 		$this->nl();
 		$this->comment($msg);
+		
+		return $this;
 	}
 	
-	public function titleSection(string $title, callable $between)
-	{
-		$this->sayTitle = $title;
-		$between();
-		$this->sayTitle = trim(substr($this->sayTitle, 0, strlen($title)));
-	}
-	
-	public function dumpArray(array $arr)
+	public function dumpArray(array $arr): self
 	{
 		$dump = Variable::dump($arr);
 		$this->writeln($dump);
-	}
-	
-	public function into1Line(string $message): string
-	{
-		$ex       = preg_split('/\r\n|\r|\n/', trim($message));
-		$newLines = [];
-		array_map(function ($line) use (&$newLines)
-		{
-			$line = trim($line);
-			if (strlen($line) > 0)
-			{
-				$newLines[] = $line;
-			}
-		}, $ex);
 		
-		return join("", $newLines);
+		return $this;
 	}
 }

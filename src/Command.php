@@ -48,14 +48,7 @@ abstract class Command extends \Symfony\Component\Console\Command\Command
 	
 	public function region(string $region, callable $regionProcess)
 	{
-		$msg = str_repeat("=", 25);
-		$msg .= "[<question> $region </question>]";
-		$msg .= str_repeat("=", 25);
-		$this->output->comment($msg);
-		$this->output->nl();
-		$regionProcess();
-		$this->output->nl();
-		$this->output->comment($msg);
+		$this->output->region(...func_get_args());
 	}
 	
 	public function processRegionCommand(string $regionName, string $command)
