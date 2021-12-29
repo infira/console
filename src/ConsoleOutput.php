@@ -151,6 +151,15 @@ class ConsoleOutput extends \Symfony\Component\Console\Output\ConsoleOutput
 		return $this;
 	}
 	
+	public function blink(string $msg): self
+	{
+		$outputStyle = new OutputFormatterStyle('red', '#ff0', ['bold', 'blink']);
+		$this->getFormatter()->setStyle('fire', $outputStyle);
+		$this->writeln("<fire>$msg</>");
+		
+		return $this;
+	}
+	
 	public function dumpArray(array $arr): self
 	{
 		$dump = Variable::dump($arr);
