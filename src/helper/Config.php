@@ -57,6 +57,7 @@ class Config
 			{
 				return false;
 			}
+			$to = &$to[$p];
 		}
 		
 		return true;
