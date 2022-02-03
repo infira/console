@@ -170,7 +170,7 @@ class ConsoleOutput extends \Symfony\Component\Console\Output\ConsoleOutput
 	public function debug(...$var): self
 	{
 		foreach ($var as $v) {
-			$this->nl->writeln(Variable::dump($v));
+			$this->nl()->writeln(Variable::dump($v));
 		}
 		
 		return $this;
