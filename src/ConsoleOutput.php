@@ -162,9 +162,36 @@ class ConsoleOutput extends \Symfony\Component\Console\Output\ConsoleOutput
 	
 	public function dumpArray(array $arr): self
 	{
-		$dump = Variable::dump($arr);
-		$this->writeln($dump);
+		$this->writeln(Variable::dump($arr));
 		
 		return $this;
+	}
+	
+	public function debug(...$var): self
+	{
+		foreach ($var as $v) {
+			$this->nl->writeln(Variable::dump($v));
+		}
+		
+		return $this;
+	}
+	
+	public function trace(): self
+	{
+		return $this->dumpArray(debug_backtrace());
+	}
+	
+	public function traceRegion(string $regionTitle = 'trace', array $trace = null)
+	{
+		$trace = $trace ?: debug_backtrace();
+		self::nl()->region($regionTitle, function () use ($trace)
+		{
+			foreach ($trace as $key => $row) {
+				$key++;
+				$row['file'] = $row['file'] ?? '';
+				$row['line'] = $row['line'] ?? '';
+				self::writeln($key . ') in file <info>' . $row['file'] . ' </info> on line ' . $row['line']);
+			}
+		});
 	}
 }
