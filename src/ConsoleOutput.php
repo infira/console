@@ -6,7 +6,7 @@ use Symfony\Component\Console\Formatter\OutputFormatterInterface;
 use Symfony\Component\Console\Cursor;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
-use Infira\Utils\Variable;
+use Wolo\VarDumper;
 use Symfony\Component\Console\Formatter\OutputFormatterStyle;
 use Infira\console\helper\Output;
 
@@ -162,7 +162,7 @@ class ConsoleOutput extends \Symfony\Component\Console\Output\ConsoleOutput
 	
 	public function dumpArray(array $arr): self
 	{
-		$this->writeln(Variable::dump($arr));
+		$this->writeln(VarDumper::console($arr));
 		
 		return $this;
 	}
@@ -170,7 +170,7 @@ class ConsoleOutput extends \Symfony\Component\Console\Output\ConsoleOutput
 	public function debug(...$var): self
 	{
 		foreach ($var as $v) {
-			$this->nl()->writeln(Variable::dump($v));
+			$this->nl()->writeln(VarDumper::console($v));
 		}
 		
 		return $this;

@@ -6,7 +6,7 @@ use Infira\Error\Handler;
 use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Input\ArgvInput;
 use Infira\Error\Error;
-use Infira\Utils\Dir;
+use Wolo\File\Dir;
 
 class Bin
 {
@@ -23,14 +23,14 @@ class Bin
 	
 	public static function init(string $basePath)
 	{
-		self::$basePath = Dir::fixPath(realpath($basePath));
+		self::$basePath = Dir::slash(realpath($basePath));
 	}
 	
 	public static function getPath(string $path = null): string
 	{
 		$extra = $path ?: '';
 		
-		return Dir::fixPath(realpath(self::$basePath . $extra));
+		return Dir::slash(realpath(self::$basePath . $extra));
 	}
 	
 	
