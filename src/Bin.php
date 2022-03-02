@@ -28,7 +28,7 @@ class Bin
 	
 	public static function getPath(string $path = null): string
 	{
-		return Path::join(realpath(self::$basePath), $extra);
+		return Path::join(realpath(self::$basePath), $path);
 	}
 	
 	
