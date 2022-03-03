@@ -33,48 +33,12 @@ abstract class Command extends \Symfony\Component\Console\Command\Command
 		set_time_limit(7200);
 		$this->output = &$output;
 		$this->input  = &$input;
+		$this->configureExecute();
 		$this->beforeExecute();
 		$this->runCommand();
 		$this->afterExecute();
 		
 		return $this->success();
-	}
-	
-	public function error(string $msg)
-	{
-		$this->output->error($msg);
-		exit;
-	}
-	
-	public function region(string $region, callable $regionProcess)
-	{
-		$this->output->region(...func_get_args());
-	}
-	
-	public function processRegionCommand(string $regionName, string $command)
-	{
-		$this->region($regionName, function () use ($regionName, $command)
-		{
-			$sectiion = $this->output->section();
-			$process  = Process::fromShellCommandline($command);
-			$process->setTimeout(1800);
-			$process->start();
-			$process->wait(function ($type, $buffer) use ($regionName, $sectiion)
-			{
-				$buffer = trim($buffer);
-				if (str_contains($buffer, '%'))
-				{
-					$sectiion->overwrite("<comment>$regionName</comment>: " . $buffer);
-					//$this->output->cl()->write("<comment>$regionName</comment>: " . trim($buffer));
-					//$this->output->cl()->msg($line);
-					//$this->output->cl()->write($line);
-				}
-				else
-				{
-					$this->output->msg($buffer);
-				}
-			});
-		});
 	}
 	
 	protected function success(): int
@@ -86,6 +50,8 @@ abstract class Command extends \Symfony\Component\Console\Command\Command
 	{
 		$this->config = new Config($yamlFile);
 	}
+	
+	protected function configureExecute() {}
 	
 	protected function beforeExecute() {}
 	

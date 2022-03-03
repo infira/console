@@ -8,7 +8,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Wolo\VarDumper;
 use Symfony\Component\Console\Formatter\OutputFormatterStyle;
-use Infira\console\helper\Output;
+use Symfony\Component\Process\Process;
 
 class ConsoleOutput extends \Symfony\Component\Console\Output\ConsoleOutput
 {
@@ -31,35 +31,35 @@ class ConsoleOutput extends \Symfony\Component\Console\Output\ConsoleOutput
 		$this->getFormatter()->setStyle('title', $outputStyle);
 	}
 	
-	public function info(string $msg): self
+	public function info(string $msg): static
 	{
 		$this->say("<info>$msg</info>");
 		
 		return $this;
 	}
 	
-	public function title(string $msg): self
+	public function title(string $msg): static
 	{
 		$this->say("<title>$msg</title>");
 		
 		return $this;
 	}
 	
-	public function comment(string $msg): self
+	public function comment(string $msg): static
 	{
 		$this->say("<comment>$msg</comment>");
 		
 		return $this;
 	}
 	
-	public function msg(string $msg): self
+	public function msg(string $msg): static
 	{
 		$this->say($msg);
 		
 		return $this;
 	}
 	
-	public function nl(): self
+	public function nl(): static
 	{
 		$gp                 = $this->globalPrefix;
 		$this->globalPrefix = '';
@@ -70,7 +70,7 @@ class ConsoleOutput extends \Symfony\Component\Console\Output\ConsoleOutput
 		return $this;
 	}
 	
-	public function cl(): self
+	public function cl(): static
 	{
 		$gp                 = $this->globalPrefix;
 		$this->globalPrefix = '';
@@ -82,14 +82,14 @@ class ConsoleOutput extends \Symfony\Component\Console\Output\ConsoleOutput
 		return $this;
 	}
 	
-	public function error(string $msg): self
+	public function error(string $msg): static
 	{
 		$this->style->error($msg);
 		
 		return $this;
 	}
 	
-	public function say(string $message): self
+	public function say(string $message): static
 	{
 		$ex = preg_split('/\r\n|\r|\n/', $message);
 		array_map(function ($line, $key)
@@ -108,9 +108,9 @@ class ConsoleOutput extends \Symfony\Component\Console\Output\ConsoleOutput
 		return $this;
 	}
 	
-	public function sayWho(string $msg, string $saysWho): self
+	public function sayWho(string $msg, string $saysWho): static
 	{
-		$msg = Output::into1Line($msg);
+		$msg = $this->into1Line($msg);
 		if (!$msg) {
 			return $this;
 		}
@@ -124,7 +124,7 @@ class ConsoleOutput extends \Symfony\Component\Console\Output\ConsoleOutput
 		return $this;
 	}
 	
-	public function write($messages, bool $newline = false, int $options = self::OUTPUT_NORMAL): self
+	public function write($messages, bool $newline = false, int $options = self::OUTPUT_NORMAL): static
 	{
 		if (!is_iterable($messages)) {
 			$messages = [$messages];
@@ -137,7 +137,7 @@ class ConsoleOutput extends \Symfony\Component\Console\Output\ConsoleOutput
 		return $this;
 	}
 	
-	public function region(string $region, callable $regionProcess): self
+	public function region(string $region, callable $regionProcess): static
 	{
 		$msg = str_repeat("=", 25);
 		$msg .= "[<question> $region </question>]";
@@ -151,7 +151,33 @@ class ConsoleOutput extends \Symfony\Component\Console\Output\ConsoleOutput
 		return $this;
 	}
 	
-	public function blink(string $msg): self
+	public function processRegionCommand(string $regionName, string $command): static
+	{
+		$this->region($regionName, function () use ($regionName, $command)
+		{
+			$sectiion = $this->output->section();
+			$process  = Process::fromShellCommandline($command);
+			$process->setTimeout(1800);
+			$process->start();
+			$process->wait(function ($type, $buffer) use ($regionName, $sectiion)
+			{
+				$buffer = trim($buffer);
+				if (str_contains($buffer, '%')) {
+					$sectiion->overwrite("<comment>$regionName</comment>: " . $buffer);
+					//$this->output->cl()->write("<comment>$regionName</comment>: " . trim($buffer));
+					//$this->output->cl()->msg($line);
+					//$this->output->cl()->write($line);
+				}
+				else {
+					$this->output->msg($buffer);
+				}
+			});
+		});
+		
+		return $this;
+	}
+	
+	public function blink(string $msg): static
 	{
 		$outputStyle = new OutputFormatterStyle('red', '#ff0', ['bold', 'blink']);
 		$this->getFormatter()->setStyle('fire', $outputStyle);
@@ -160,14 +186,14 @@ class ConsoleOutput extends \Symfony\Component\Console\Output\ConsoleOutput
 		return $this;
 	}
 	
-	public function dumpArray(array $arr): self
+	public function dumpArray(array $arr): static
 	{
 		$this->writeln(VarDumper::console($arr));
 		
 		return $this;
 	}
 	
-	public function debug(...$var): self
+	public function debug(...$var): static
 	{
 		foreach ($var as $v) {
 			$this->nl()->writeln(VarDumper::console($v));
@@ -176,7 +202,7 @@ class ConsoleOutput extends \Symfony\Component\Console\Output\ConsoleOutput
 		return $this;
 	}
 	
-	public function trace(): self
+	public function trace(): static
 	{
 		return $this->dumpArray(debug_backtrace());
 	}
@@ -193,5 +219,20 @@ class ConsoleOutput extends \Symfony\Component\Console\Output\ConsoleOutput
 				self::writeln($key . ') in file <info>' . $row['file'] . ' </info> on line ' . $row['line']);
 			}
 		});
+	}
+	
+	public function into1Line(string $message): string
+	{
+		$ex       = preg_split('/\r\n|\r|\n/', trim($message));
+		$newLines = [];
+		array_map(function ($line) use (&$newLines)
+		{
+			$line = trim($line);
+			if (strlen($line) > 0) {
+				$newLines[] = $line;
+			}
+		}, $ex);
+		
+		return join("", $newLines);
 	}
 }

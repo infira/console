@@ -3,8 +3,6 @@
 namespace Infira\console;
 
 use Infira\Error\Handler;
-use Symfony\Component\Console\Application;
-use Symfony\Component\Console\Input\ArgvInput;
 use Infira\Error\Error;
 use Wolo\File\Path;
 
@@ -14,7 +12,7 @@ class Bin
 	/**
 	 * @var ConsoleOutput
 	 */
-	private static $output;
+	private static $output = null;
 	
 	/**
 	 * @var Handler
@@ -31,36 +29,67 @@ class Bin
 		return Path::join(realpath(self::$basePath), $path);
 	}
 	
-	public static function error(string $msg)
-	{
-		self::$output->info($msg);
-	}
-	
 	public static function run(string $appName, callable $middleware)
 	{
 		Handler::register();
 		try {
-			$input        = new ArgvInput();
-			self::$output = new ConsoleOutput($input);
-			$app          = new Application($appName);
-			$middleware($app, self::$output);
+			$ref   = new \ReflectionFunction($middleware);
+			$input = null;
+			$app   = null;
+			
+			foreach ($ref->getParameters() as $parameter) {
+				$type = $parameter->getType()->getName();
+				if ($type instanceof \Symfony\Component\Console\Input\InputInterface) {
+					$input = new $type();
+				}
+			}
+			if (!$input) {
+				$input = new \Symfony\Component\Console\Input\ArgvInput();
+			}
+			
+			foreach ($ref->getParameters() as $parameter) {
+				$type = $parameter->getType()->getName();
+				if ($type instanceof \Symfony\Component\Console\Application) {
+					$app = new $type($appName);
+				}
+				elseif ($type instanceof \Symfony\Component\Console\Output\ConsoleOutput) {
+					Console::$output = new $type($input);
+				}
+			}
+			if (!$app) {
+				$app = new \Symfony\Component\Console\Application($appName);
+			}
+			if (!Console::$output) {
+				Console::$output = new ConsoleOutput($input);
+			}
+			
+			
+			$middleware($app, Console::$output);
 			$app->setCatchExceptions(false);
-			$app->run($input, self::$output);
-			self::$output->info('command finished successfuly');
+			$app->run($input, Console::$output);
+			Console::info('command finished successfuly');
 		}
 		catch (\Throwable $e) {
 			$stack = Handler::compile($e);
-			self::$output->error($e->getMessage());
+			Console::$output->error($e->getMessage());
 			$extra = $stack->toArray();
 			if ($extra) {
-				self::$output->region('Extra', function () use (&$extra)
+				Console::region('Extra', function () use (&$extra)
 				{
-					self::$output->dumpArray($extra);
+					$extra = array_filter($extra, function ($item, $key)
+					{
+						if (in_array($key, ['trace', 'server'])) {
+							return false;
+						}
+						
+						return true;
+					}, ARRAY_FILTER_USE_BOTH);
+					Console::dumpArray($extra);
 				});
 			}
 			$trace = $stack->trace;
 			if ($trace) {
-				self::$output->traceRegion('error trace', $trace);
+				Console::traceRegion('error trace', $trace);
 			}
 			
 		}
