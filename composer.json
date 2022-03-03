@@ -17,7 +17,7 @@
 	"symfony/yaml": "5.*",
 	"symfony/console": "5.*",
 	"symfony/process": "5.*",
-	"infira/errorhandler": "1.*",
+	"infira/errorhandler": "v2.x-dev",
 	"illuminate/support": "8.x-dev",
 	"infira/wolo": "dev-main"
   }

@@ -31,14 +31,14 @@ class Bin
 		return Path::join(realpath(self::$basePath), $path);
 	}
 	
+	public static function error(string $msg)
+	{
+		self::$output->info($msg);
+	}
 	
 	public static function run(string $appName, callable $middleware)
 	{
-		self::$eh = new Handler([
-			"errorLevel"           => -1,//-1 means all erors, see https://www.php.net/manual/en/function.error-reporting.php
-			"env"                  => "dev", //dev,stable (stable env does not display full errors erros
-			"debugBacktraceOption" => DEBUG_BACKTRACE_IGNORE_ARGS,
-		]);
+		Handler::register();
 		try {
 			$input        = new ArgvInput();
 			self::$output = new ConsoleOutput($input);
@@ -48,30 +48,21 @@ class Bin
 			$app->run($input, self::$output);
 			self::$output->info('command finished successfuly');
 		}
-		catch (Error $e) {
-			self::handleThrowable($e);
-		}
 		catch (\Throwable $e) {
-			self::handleThrowable($e);
-		}
-	}
-	
-	private static function handleThrowable(object $e)
-	{
-		if (!($e instanceof Error)) {
-			$e = self::$eh->catch($e);
-		}
-		self::$output->error($e->getMessage());
-		$extra = $e->getStack()->extra ?: [];
-		if ($extra) {
-			self::$output->region('Extra', function () use (&$extra)
-			{
-				self::$output->dumpArray($extra);
-			});
-		}
-		$trace = $e->getStackTrace();
-		if ($trace) {
-			self::$output->traceRegion('error trace', $trace);
+			$stack = Handler::compile($e);
+			self::$output->error($e->getMessage());
+			$extra = $stack->toArray();
+			if ($extra) {
+				self::$output->region('Extra', function () use (&$extra)
+				{
+					self::$output->dumpArray($extra);
+				});
+			}
+			$trace = $stack->trace;
+			if ($trace) {
+				self::$output->traceRegion('error trace', $trace);
+			}
+			
 		}
 	}
 }
