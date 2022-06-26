@@ -2,13 +2,14 @@
 
 namespace Infira\console;
 
-use Symfony\Component\Console\Formatter\OutputFormatterInterface;
 use Symfony\Component\Console\Cursor;
+use Symfony\Component\Console\Formatter\OutputFormatterInterface;
+use Symfony\Component\Console\Formatter\OutputFormatterStyle;
+use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
-use Wolo\VarDumper;
-use Symfony\Component\Console\Formatter\OutputFormatterStyle;
 use Symfony\Component\Process\Process;
+use Wolo\VarDumper;
 
 class ConsoleOutput extends \Symfony\Component\Console\Output\ConsoleOutput
 {
@@ -22,7 +23,7 @@ class ConsoleOutput extends \Symfony\Component\Console\Output\ConsoleOutput
 	 */
 	private $globalPrefix = '';
 	
-	public function __construct($input, int $verbosity = OutputInterface::VERBOSITY_NORMAL, bool $decorated = null, OutputFormatterInterface $formatter = null)
+	public function __construct(InputInterface $input, int $verbosity = OutputInterface::VERBOSITY_NORMAL, bool $decorated = null, OutputFormatterInterface $formatter = null)
 	{
 		parent::__construct($verbosity, $decorated, $formatter);
 		$this->style = new SymfonyStyle($input, $this);

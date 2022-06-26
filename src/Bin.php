@@ -3,16 +3,11 @@
 namespace Infira\console;
 
 use Infira\Error\Handler;
-use Infira\Error\Error;
 use Wolo\File\Path;
 
 class Bin
 {
 	private static $basePath = '';
-	/**
-	 * @var ConsoleOutput
-	 */
-	private static $output = null;
 	
 	/**
 	 * @var Handler
@@ -32,24 +27,22 @@ class Bin
 	public static function run(string $appName, callable $middleware)
 	{
 		Handler::register();
+		$ref             = new \ReflectionFunction($middleware);
+		$input           = new \Symfony\Component\Console\Input\ArgvInput();
+		Console::$output = new ConsoleOutput($input);
 		try {
-			$ref   = new \ReflectionFunction($middleware);
-			$input = null;
-			$app   = null;
+			$app = null;
 			
 			foreach ($ref->getParameters() as $parameter) {
-				$type = $parameter->getType()->getName();
+				$type = $parameter->getType();
+				if (!$type) {
+					continue;
+				}
+				$type = $type->getName();
 				if ($type instanceof \Symfony\Component\Console\Input\InputInterface) {
 					$input = new $type();
 				}
-			}
-			if (!$input) {
-				$input = new \Symfony\Component\Console\Input\ArgvInput();
-			}
-			
-			foreach ($ref->getParameters() as $parameter) {
-				$type = $parameter->getType()->getName();
-				if ($type instanceof \Symfony\Component\Console\Application) {
+				elseif ($type instanceof \Symfony\Component\Console\Application) {
 					$app = new $type($appName);
 				}
 				elseif ($type instanceof \Symfony\Component\Console\Output\ConsoleOutput) {
@@ -59,10 +52,6 @@ class Bin
 			if (!$app) {
 				$app = new \Symfony\Component\Console\Application($appName);
 			}
-			if (!Console::$output) {
-				Console::$output = new ConsoleOutput($input);
-			}
-			
 			
 			$middleware($app, Console::$output);
 			$app->setCatchExceptions(false);
