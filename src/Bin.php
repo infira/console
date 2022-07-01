@@ -17,6 +17,7 @@ class Bin
 	public static function init(string $basePath)
 	{
 		self::$basePath = Path::slash(realpath($basePath));
+		Handler::register();
 	}
 	
 	public static function getPath(string $path = null): string
@@ -26,7 +27,6 @@ class Bin
 	
 	public static function run(string $appName, callable $middleware)
 	{
-		Handler::register();
 		$ref             = new \ReflectionFunction($middleware);
 		$input           = new \Symfony\Component\Console\Input\ArgvInput();
 		Console::$output = new ConsoleOutput($input);
