@@ -17,7 +17,9 @@ class Bin
 	public static function init(string $basePath)
 	{
 		self::$basePath = Path::slash(realpath($basePath));
-		Handler::register();
+        Handler::register([
+            'dateFormat' => 'd.m.Y H:i:s'
+        ]);
 	}
 	
 	public static function getPath(string $path = null): string
