@@ -71,12 +71,12 @@ class Utils
 	{
 		$typeStr = trim($typeStr);
 		$types   = [];
-		if ($typeStr[0] == "?") {
+		if ($typeStr[0] === "?") {
 			$types[] = 'null';
 			$typeStr = substr($typeStr, 1);
 		}
 		
-		if ($typeStr[0] == '\\') {
+		if ($typeStr[0] === '\\') {
 			$types[] = 'array';
 			$types[] = '\stdClass';
 			if ($callable) {

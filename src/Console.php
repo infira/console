@@ -4,7 +4,6 @@ namespace Infira\console;
 
 use Symfony\Component\Console\Output\OutputInterface;
 use Infira\Error\Error;
-use Infira\Error\AlertException;
 
 /**
  * @method static ConsoleOutput info(string $msg)
