@@ -43,6 +43,10 @@ class Console
      */
     public static function error(string $msg, mixed $data = null): void
     {
-        throw (new ConsoleRuntimeException($msg))->with($data);
+        $exception = new ConsoleRuntimeException($msg);
+        if ($data !== null) {
+            $exception = $exception->with($data);
+        }
+        throw $exception;
     }
 }
