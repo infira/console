@@ -3,7 +3,6 @@
 namespace Infira\console;
 
 use Symfony\Component\Console\Output\OutputInterface;
-use Infira\Error\Error;
 
 /**
  * @method static ConsoleOutput info(string $msg)
@@ -26,18 +25,24 @@ use Infira\Error\Error;
  */
 class Console
 {
-	/**
-	 * @var ConsoleOutput
-	 */
-	public static $output;
-	
-	public static function __callStatic(string $name, array $arguments)
-	{
-		return self::$output->$name(...$arguments);
-	}
-	
-	public static function error(string $msg, mixed $data = null): void
-	{
-		Error::trigger($msg, $data);
-	}
+    /**
+     * @var ConsoleOutput
+     */
+    public static ConsoleOutput $output;
+
+    public static function __callStatic(string $name, array $arguments)
+    {
+        return self::$output->$name(...$arguments);
+    }
+
+    /**
+     * @param  string  $msg
+     * @param  mixed|null  $data
+     * @return void
+     * @throws ConsoleRuntimeException
+     */
+    public static function error(string $msg, mixed $data = null): void
+    {
+        throw (new ConsoleRuntimeException($msg))->with($data);
+    }
 }

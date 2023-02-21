@@ -1,24 +1,23 @@
 {
   "name": "infira/console",
+  "type": "package",
   "autoload": {
-	"psr-4": {
-	  "Infira\\console\\": "src/"
-	}
+    "psr-4": {
+      "Infira\\console\\": "src/"
+    }
   },
   "minimum-stability": "dev",
   "authors": [
-	{
-	  "name": "Gen Taliar",
-	  "email": "gen@infira.ee"
-	}
+    {
+      "name": "Gen Taliar",
+      "email": "gen@infira.ee"
+    }
   ],
   "require": {
-	"php": ">=8.0.2",
-	"symfony/yaml": "5.*",
-	"symfony/console": "5.*",
-	"symfony/process": "5.*",
-	"infira/errorhandler": "v2.0.1",
-	"illuminate/support": "~v8|~v9",
-	"infira/wolo": "dev-main"
+    "php": ">=8.0.2",
+    "symfony/console": "v6.2.5",
+    "symfony/process": "v6.2.5",
+    "infira/errorhandler": "^v2.1",
+    "infira/wolo": "dev-main"
   }
 }
