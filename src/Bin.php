@@ -6,18 +6,21 @@ use Infira\Error\Handler;
 
 class Bin
 {
-    public static function init()
+    private static $outputClass;
+
+    public static function init(array $options = []): void
     {
         Handler::register([
-            'dateFormat' => 'd.m.Y H:i:s'
+            'dateFormat' => $options['errorHandlerDateFormat'] ?? 'd.m.Y H:i:s'
         ]);
+        self::$outputClass = $options['outputClass'] ?? ConsoleOutput::class;
     }
 
     public static function run(string $appName, callable $middleware): void
     {
         $ref = new \ReflectionFunction($middleware);
         $input = new \Symfony\Component\Console\Input\ArgvInput();
-        Console::$output = new ConsoleOutput($input);
+        Console::$output = new self::$outputClass($input);
         try {
             $app = null;
 
