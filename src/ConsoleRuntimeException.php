@@ -1,6 +1,6 @@
 <?php
 
-namespace Infira\console;
+namespace Infira\Console;
 
 use Infira\Error\Exception\SPL\RuntimeException;
 

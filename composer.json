@@ -3,7 +3,7 @@
   "type": "package",
   "autoload": {
     "psr-4": {
-      "Infira\\console\\": "src/"
+      "Infira\\Console\\": "src/"
     }
   },
   "minimum-stability": "dev",

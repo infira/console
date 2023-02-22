@@ -1,7 +1,8 @@
 <?php
 
-namespace Infira\console;
+namespace Infira\Console;
 
+use Infira\Console\Output\ConsoleOutput;
 use Infira\Error\Handler;
 
 class Bin

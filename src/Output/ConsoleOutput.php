@@ -1,6 +1,6 @@
 <?php
 
-namespace Infira\console;
+namespace Infira\Console\Output;
 
 use Symfony\Component\Console\Cursor;
 use Symfony\Component\Console\Formatter\OutputFormatterInterface;
