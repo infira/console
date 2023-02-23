@@ -4,6 +4,10 @@ namespace Infira\Console;
 
 use Infira\Console\Output\ConsoleOutput;
 use Infira\Error\Handler;
+use Symfony\Component\Console\Application;
+use Symfony\Component\Console\Input\ArgvInput;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Output\ConsoleOutputInterface;
 
 class Bin
 {
@@ -25,32 +29,47 @@ class Bin
     public static function run(string $appName, callable $middleware): int
     {
         $ref = new \ReflectionFunction($middleware);
-        $input = new \Symfony\Component\Console\Input\ArgvInput();
-        Console::$output = new (self::$options['outputClass'] ?? ConsoleOutput::class)($input);
+        $app = null;
+        $middlewareArguments = [];
+        foreach ($ref->getParameters() as $parameter) {
+            $type = $parameter->getType();
+            if (!$type) {
+                throw new \RuntimeException("parameter('".$parameter->getName()." type not defined");
+            }
+            $type = $type->getName();
+            if (is_a($type, InputInterface::class, true)) {
+                $input = new $type();
+                $middlewareArguments[] = $input;
+            }
+            elseif (is_a($type, Application::class, true)) {
+                $app = new $type($appName);
+                $middlewareArguments[] = $app;
+            }
+            elseif (is_a($type, ConsoleOutputInterface::class, true)) {
+                if (!isset($input)) {
+                    $input = new ArgvInput();
+                }
+                Console::$output = new $type($input);
+                $middlewareArguments[] = Console::$output;
+            }
+            else {
+                throw new \RuntimeException("Unknown type('$type')");
+            }
+        }
         try {
-            $app = null;
-
-            foreach ($ref->getParameters() as $parameter) {
-                $type = $parameter->getType();
-                if (!$type) {
-                    continue;
-                }
-                $type = $type->getName();
-                if ($type instanceof \Symfony\Component\Console\Input\InputInterface) {
-                    $input = new $type();
-                }
-                elseif ($type instanceof \Symfony\Component\Console\Application) {
-                    $app = new $type($appName);
-                }
-                elseif ($type instanceof \Symfony\Component\Console\Output\ConsoleOutput) {
-                    Console::$output = new $type($input);
-                }
-            }
             if (!$app) {
-                $app = new \Symfony\Component\Console\Application($appName);
+                $app = new Application($appName);
             }
 
-            $middleware($app, Console::$output, $input);
+            if (!isset($input)) {
+                $input = new ArgvInput();
+            }
+
+            if (!isset(Console::$output)) {
+                Console::$output = new ConsoleOutput($input);
+            }
+
+            $middleware(...$middlewareArguments);
             $app->setCatchExceptions(false);
             $app->setAutoExit(false);
 
