@@ -11,7 +11,7 @@ class Bin
 
     public static function init(
         array $options = [
-            'formatPHPStormFileLinks' => true,
+            'traceFormatter' => null, //callable
             'errorHandlerDateFormat' => 'd.m.Y H:i:s'
         ]
     ): void {
@@ -71,7 +71,7 @@ class Bin
             }
             if ($stack->trace) {
                 Console::miniRegion('trace', static function () use ($stack) {
-                    Console::dumpTrace($stack->trace,isset(self::$options['formatPHPStormFileLinks']));
+                    Console::dumpTrace($stack->trace, self::$options['traceFormatter'] ?? null);
                 });
             }
         }

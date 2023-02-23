@@ -104,16 +104,22 @@ class ConsoleOutput extends \Symfony\Component\Console\Output\ConsoleOutput
         return $this->dumpArray(debug_backtrace());
     }
 
-    public function dumpTrace(array $trace,bool $formatPHPStormFileLinks = true): void
+    /**
+     * @template TTraceItem
+     * @param  array  $trace
+     * @param  callable<TTraceItem>|null  $formatter
+     * @return void
+     */
+    public function dumpTrace(array $trace, callable $formatter = null): void
     {
         foreach ($trace as $key => $row) {
             $key++;
-            $file = $row['file'] ?? '';
-            $line = $row['line'] ?? '';
-            if ($formatPHPStormFileLinks) {
-                $this->writeln("<href=phpstorm://open?file=$file&line=$line>$file:$line</>");
+            if ($formatter) {
+                $this->writeln($formatter($row));
             }
             else {
+                $file = $row['file'] ?? '';
+                $line = $row['line'] ?? '';
                 $this->writeln("$key) in file <info>$file:$line</info> on line");
             }
         }

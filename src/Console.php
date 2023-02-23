@@ -12,7 +12,7 @@ use Infira\Console\Output\ConsoleOutput;
  * @method static ConsoleOutput dumpArray(array $arr)
  * @method static ConsoleOutput debug(...$var)
  * @method static ConsoleOutput trace()
- * @method static void dumpTrace(array $trace,bool $formatPHPStormFileLinks = true)
+ * @method static void dumpTrace(array $trace, callable $formatter = null)
  * @method static ConsoleOutput writeEachLine(string|array $message)
  * @method static void write(iterable|string $messages, bool $newline = false, int $options = self::OUTPUT_NORMAL)
  * @method static void writeln(string|iterable $messages, int $options = self::OUTPUT_NORMAL)
