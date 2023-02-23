@@ -7,21 +7,26 @@ use Infira\Error\Handler;
 
 class Bin
 {
-    private static $outputClass;
+    private static array $options = [];
 
-    public static function init(array $options = []): void
-    {
+    public static function init(
+        array $options = [
+            'formatPHPStormFileLinks' => true,
+            'errorHandlerDateFormat' => 'd.m.Y H:i:s'
+        ]
+    ): void {
         Handler::register([
-            'dateFormat' => $options['errorHandlerDateFormat'] ?? 'd.m.Y H:i:s'
+            'dateFormat' => $options['errorHandlerDateFormat'] ?? 'd.m.Y H:i:s',
+
         ]);
-        self::$outputClass = $options['outputClass'] ?? ConsoleOutput::class;
+        self::$options = $options;
     }
 
     public static function run(string $appName, callable $middleware): void
     {
         $ref = new \ReflectionFunction($middleware);
         $input = new \Symfony\Component\Console\Input\ArgvInput();
-        Console::$output = new self::$outputClass($input);
+        Console::$output = new (self::$options['outputClass'] ?? ConsoleOutput::class)($input);
         try {
             $app = null;
 
@@ -48,27 +53,26 @@ class Bin
             $middleware($app, Console::$output);
             $app->setCatchExceptions(false);
             $app->run($input, Console::$output);
-            Console::info('command finished successfuly');
+            Console::$output->style->success('command finished successfuly');
         }
         catch (\Throwable $e) {
             $stack = Handler::compile($e);
             Console::$output->error($e->getMessage());
             $extra = $stack->toArray();
             if ($extra) {
-                Console::region('Extra', static function () use (&$extra) {
-                    $extra = array_filter($extra, static function ($item, $key) {
-                        if (in_array($key, ['trace', 'server'])) {
-                            return false;
-                        }
+                $extra = array_filter($extra, static function ($item, $key) {
+                    if (in_array($key, ['trace', 'server'])) {
+                        return false;
+                    }
 
-                        return true;
-                    }, ARRAY_FILTER_USE_BOTH);
-                    Console::dumpArray($extra);
-                });
+                    return true;
+                }, ARRAY_FILTER_USE_BOTH);
+                Console::dumpArray($extra);
             }
-            $trace = $stack->trace;
-            if ($trace) {
-                Console::traceRegion('error trace', $trace);
+            if ($stack->trace) {
+                Console::miniRegion('trace', static function () use ($stack) {
+                    Console::dumpTrace($stack->trace,isset(self::$options['formatPHPStormFileLinks']));
+                });
             }
         }
     }

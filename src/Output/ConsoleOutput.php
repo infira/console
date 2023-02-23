@@ -2,153 +2,83 @@
 
 namespace Infira\Console\Output;
 
+use Infira\Console\Utils;
 use Symfony\Component\Console\Cursor;
 use Symfony\Component\Console\Formatter\OutputFormatterInterface;
 use Symfony\Component\Console\Formatter\OutputFormatterStyle;
+use Symfony\Component\Console\Helper\FormatterHelper;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Output\ConsoleSectionOutput;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Wolo\VarDumper;
 
 class ConsoleOutput extends \Symfony\Component\Console\Output\ConsoleOutput
 {
-    private SymfonyStyle $style;
-
-    private string $globalPrefix = '';
+    public SymfonyStyle $style;
+    public Cursor $cursor;
+    private array $consoleRegionSections = [];
+    /**
+     * @var ConsoleOutputWrapper[]
+     */
+    private array $regions = [];
 
     public function __construct(InputInterface $input, int $verbosity = OutputInterface::VERBOSITY_NORMAL, bool $decorated = null, OutputFormatterInterface $formatter = null)
     {
-        parent::__construct($verbosity, $decorated, $formatter);
+        parent::__construct(
+            $verbosity,
+            $decorated,
+            $formatter
+        );
         $this->style = new SymfonyStyle($input, $this);
-
         $outputStyle = new OutputFormatterStyle('magenta');
         $this->getFormatter()->setStyle('title', $outputStyle);
+        $this->cursor = new Cursor($this);
     }
 
-    public function info(string $msg): static
+    public function writeSection(string $section, string $message, bool $newLine = false): static
     {
-        $this->say("<info>$msg</info>");
+        $formatter = new FormatterHelper();
+        $formattedLine = $formatter->formatSection($section, $message);
+        $this->writeln($formattedLine, $newLine);
 
         return $this;
     }
 
-    public function title(string $msg): static
+    /**
+     * @param  string  $title
+     * @param  callable  $process  - while region is open every output send to console will be caught
+     * @param  int|null  $maxItems
+     * @return $this
+     */
+    public function region(string $title, callable $process, int $maxItems = null): static
     {
-        $this->say("<title>$msg</title>");
+        $eq = str_repeat("=", 25);
+        $this->addWrapper(
+            "<comment>$eq".'['."<question> $title </question>".']'."$eq</comment>",
+            $maxItems
+        );
+        $process();
+        $this->popWrapper();
 
         return $this;
     }
 
-    public function comment(string $msg): static
+    /**
+     * @param  string  $title
+     * @param  callable  $process  - while region is open every output send to console will be caught
+     * @param  int|null  $maxItems
+     * @return $this
+     */
+    public function miniRegion(string $title, callable $process, int $maxItems = null): static
     {
-        $this->say("<comment>$msg</comment>");
-
-        return $this;
-    }
-
-    public function msg(string $msg): static
-    {
-        $this->say($msg);
-
-        return $this;
-    }
-
-    public function nl(): static
-    {
-        $gp = $this->globalPrefix;
-        $this->globalPrefix = '';
-        //$this->style->newLine(1);
-        $this->writeln(" ");
-        $this->globalPrefix = $gp;
-
-        return $this;
-    }
-
-    public function cl(): static
-    {
-        $gp = $this->globalPrefix;
-        $this->globalPrefix = '';
-        $cursor = new Cursor($this);
-        $cursor->clearLine();
-        $cursor->moveToColumn(1);
-        $this->globalPrefix = $gp;
-
-        return $this;
-    }
-
-    public function error(string $msg): static
-    {
-        $this->style->error($msg);
-
-        return $this;
-    }
-
-    public function say(string $message): static
-    {
-        $ex = preg_split('/\r\n|\r|\n/', $message);
-        array_map(function ($line) {
-            $line = trim($line);
-            $origLine = $line;
-            if ($line) {
-                $line = str_replace('<nl/>', '', $line);
-                $this->writeln($line);
-                if (str_contains($origLine, '<nl/>')) {
-                    $this->nl();
-                }
-            }
-        }, $ex, array_keys($ex));
-
-        return $this;
-    }
-
-    public function sayWho(string $msg, string $saysWho): static
-    {
-        $msg = $this->into1Line($msg);
-        if (!$msg) {
-            return $this;
-        }
-
-        $msg = trim($msg);
-        $msg = $msg ? " $msg" : '';
-        //$title = $this->sayTitle ? "<title> $this->sayTitle </title>" : '';
-        $msg = "<fg=black;bg=bright-yellow>$saysWho: </>$msg";
-        $this->say($msg);
-
-        return $this;
-    }
-
-    public function write($messages, bool $newline = false, int $options = self::OUTPUT_NORMAL): static
-    {
-        if (!is_iterable($messages)) {
-            $messages = [$messages];
-        }
-        foreach ($messages as $k => $message) {
-            $messages[$k] = $this->globalPrefix ? $this->globalPrefix.$message : $message;
-        }
-        parent::write($messages, $newline, $options);
-
-        return $this;
-    }
-
-    public function region(string $region, callable $regionProcess): static
-    {
-        $msg = str_repeat("=", 25);
-        $msg .= "[<question> $region </question>]";
-        $msg .= str_repeat("=", 25);
-        $this->comment($msg);
-        $this->nl();
-        $regionProcess();
-        $this->nl();
-        $this->comment($msg);
-
-        return $this;
-    }
-
-    public function blink(string $msg): static
-    {
-        $outputStyle = new OutputFormatterStyle('red', '#ff0', ['bold', 'blink']);
-        $this->getFormatter()->setStyle('fire', $outputStyle);
-        $this->writeln("<fire>$msg</>");
+        $eq = str_repeat('-', 25);
+        $this->addWrapper(
+            "<fg=magenta>$eq</>".'['." $title ".']'."<fg=magenta>$eq</>",
+            $maxItems
+        );
+        $process();
+        $this->popWrapper();
 
         return $this;
     }
@@ -174,30 +104,100 @@ class ConsoleOutput extends \Symfony\Component\Console\Output\ConsoleOutput
         return $this->dumpArray(debug_backtrace());
     }
 
-    public function traceRegion(string $regionTitle = 'trace', array $trace = null): void
+    public function dumpTrace(array $trace,bool $formatPHPStormFileLinks = true): void
     {
-        $trace = $trace ?: debug_backtrace();
-        $this->nl()->region($regionTitle, function () use ($trace) {
-            foreach ($trace as $key => $row) {
-                $key++;
-                $row['file'] = $row['file'] ?? '';
-                $row['line'] = $row['line'] ?? '';
-                self::writeln($key.') in file <info>'.$row['file'].' </info> on line '.$row['line']);
+        foreach ($trace as $key => $row) {
+            $key++;
+            $file = $row['file'] ?? '';
+            $line = $row['line'] ?? '';
+            if ($formatPHPStormFileLinks) {
+                $this->writeln("<href=phpstorm://open?file=$file&line=$line>$file:$line</>");
             }
-        });
+            else {
+                $this->writeln("$key) in file <info>$file:$line</info> on line");
+            }
+        }
     }
 
-    public function into1Line(string $message): string
+    public function writeEachLine(string|array $message): static
     {
-        $ex = preg_split('/\r\n|\r|\n/', trim($message));
-        $newLines = [];
-        array_map(static function ($line) use (&$newLines) {
-            $line = trim($line);
-            if ($line) {
-                $newLines[] = $line;
-            }
-        }, $ex);
+        Utils::eachLine($message, static fn($line) => $this->writeln($line));
 
-        return implode("", $newLines);
+        return $this;
     }
+
+    public function write(iterable|string $messages, bool $newline = false, int $options = self::OUTPUT_NORMAL): void
+    {
+        if ($this->regions) {
+            $count = count($this->regions);
+
+            $last = end($this->regions);
+            $last->write(...func_get_args());
+            if ($count > 1) {
+                $current = $this->regions[0];
+                foreach (array_slice($this->regions, 1) as $region) {
+                    $current->addSubRegionContent($region);
+                    $current = $region;
+                }
+            }
+
+            return;
+        }
+        parent::write($messages, $newline, $options);
+    }
+
+    //region style shortcuts
+    public function nl(int $lines = 1): static //add new line
+    {
+        $this->style->newLine($lines);
+
+        return $this;
+    }
+
+    public function clearLine(int $lines = 1): static
+    {
+        $this->cursor->moveUp($lines)->clearLineAfter();
+
+        return $this;
+    }
+
+    public function error(string $msg): static
+    {
+        $this->style->error($msg);
+
+        return $this;
+    }
+
+    public function blink(string $msg): static
+    {
+        $outputStyle = new OutputFormatterStyle('red', '#ff0', ['bold', 'blink']);
+        $this->getFormatter()->setStyle('fire', $outputStyle);
+        $this->writeln("<fire>$msg</>");
+
+        return $this;
+    }
+
+    //endregion
+
+    //region wrapping console outputs
+    private function addWrapper(string $wrap, int $maxItems = null): void
+    {
+        $isFirst = count($this->regions) === 0;
+        $this->regions[] = new ConsoleOutputWrapper(
+            $wrap,
+            $isFirst ? $this->section() : $this->createMemorySection(),
+            $maxItems
+        );
+    }
+
+    private function createMemorySection(): ConsoleSectionOutput
+    {
+        return new ConsoleSectionOutput(fopen('php://memory', 'wb', false), $this->consoleRegionSections, $this->getVerbosity(), $this->isDecorated(), $this->getFormatter());
+    }
+
+    private function popWrapper(): void
+    {
+        array_pop($this->regions);
+    }
+    //endregion
 }

@@ -3,26 +3,22 @@
 namespace Infira\Console;
 
 use Infira\Console\Output\ConsoleOutput;
-use Symfony\Component\Console\Output\OutputInterface;
 
 /**
- * @method static ConsoleOutput info(string $msg)
- * @method static ConsoleOutput title(string $msg)
- * @method static ConsoleOutput comment(string $msg)
- * @method static ConsoleOutput msg(string $msg)
- * @method static ConsoleOutput nl()
- * @method static ConsoleOutput cl()
- * @method static ConsoleOutput say(string $message)
- * @method static ConsoleOutput sayWho(string $msg, string $saysWho)
- * @method static ConsoleOutput write($messages, bool $newline = false, int $options = OutputInterface::OUTPUT_NORMAL)
- * @method static ConsoleOutput region(string $region, callable $regionProcess)
- * @method static ConsoleOutput processRegionCommand(string $regionName, string $command)
- * @method static ConsoleOutput blink(string $msg)
+ * @mixin ConsoleOutput
+ * @method static ConsoleOutput writeSection(string $section, string $message, bool $newLine = false)
+ * @method static ConsoleOutput region(string $title, callable $process, int $maxItems = null)
+ * @method static ConsoleOutput miniRegion(string $title, callable $process, int $maxItems = null)
  * @method static ConsoleOutput dumpArray(array $arr)
  * @method static ConsoleOutput debug(...$var)
  * @method static ConsoleOutput trace()
- * @method static ConsoleOutput traceRegion(string $regionTitle = 'trace', array $trace = null);
- * @method static string into1Line(string $message)
+ * @method static void dumpTrace(array $trace,bool $formatPHPStormFileLinks = true)
+ * @method static ConsoleOutput writeEachLine(string|array $message)
+ * @method static void write(iterable|string $messages, bool $newline = false, int $options = self::OUTPUT_NORMAL)
+ * @method static void writeln(string|iterable $messages, int $options = self::OUTPUT_NORMAL)
+ * @method static ConsoleOutput nl(int $lines = 1)
+ * @method static ConsoleOutput clearLine(int $lines = 1)
+ * @method static ConsoleOutput blink(string $msg)
  */
 class Console
 {
