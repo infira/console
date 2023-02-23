@@ -22,7 +22,7 @@ class Bin
         self::$options = $options;
     }
 
-    public static function run(string $appName, callable $middleware): void
+    public static function run(string $appName, callable $middleware): int
     {
         $ref = new \ReflectionFunction($middleware);
         $input = new \Symfony\Component\Console\Input\ArgvInput();
@@ -50,10 +50,11 @@ class Bin
                 $app = new \Symfony\Component\Console\Application($appName);
             }
 
-            $middleware($app, Console::$output);
+            $middleware($app, Console::$output, $input);
             $app->setCatchExceptions(false);
-            $app->run($input, Console::$output);
-            Console::$output->style->success('command finished successfuly');
+            $app->setAutoExit(false);
+
+            return $app->run($input, Console::$output);
         }
         catch (\Throwable $e) {
             $stack = Handler::compile($e);
@@ -74,6 +75,7 @@ class Bin
                     Console::dumpTrace($stack->trace, self::$options['traceFormatter'] ?? null);
                 });
             }
+            exit;
         }
     }
 }
