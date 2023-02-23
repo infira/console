@@ -36,11 +36,11 @@ class ConsoleOutput extends \Symfony\Component\Console\Output\ConsoleOutput
         $this->cursor = new Cursor($this);
     }
 
-    public function writeSection(string $section, string $message, bool $newLine = false): static
+    public function writeSection(string $section, string $message, string $style = 'info'): static
     {
         $formatter = new FormatterHelper();
-        $formattedLine = $formatter->formatSection($section, $message);
-        $this->writeln($formattedLine, $newLine);
+        $formattedLine = $formatter->formatSection($section, $message, $style);
+        $this->writeln($formattedLine);
 
         return $this;
     }
