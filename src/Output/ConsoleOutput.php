@@ -186,12 +186,21 @@ class ConsoleOutput extends \Symfony\Component\Console\Output\ConsoleOutput
     //endregion
 
     //region wrapping console outputs
+    public function createWrapper(string $wrap, bool $useMemory = false, int $maxItems = null): ConsoleOutputWrapper
+    {
+        return new ConsoleOutputWrapper(
+            $wrap,
+            $useMemory ? $this->createMemorySection() : $this->section(),
+            $maxItems
+        );
+    }
+
     private function addWrapper(string $wrap, int $maxItems = null): void
     {
         $isFirst = count($this->regions) === 0;
-        $this->regions[] = new ConsoleOutputWrapper(
+        $this->regions[] = $this->createWrapper(
             $wrap,
-            $isFirst ? $this->section() : $this->createMemorySection(),
+            !$isFirst,
             $maxItems
         );
     }
