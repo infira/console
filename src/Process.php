@@ -68,18 +68,6 @@ class Process extends \Symfony\Component\Process\Process
         return $this->task ?? null;
     }
 
-    public function speakOld(mixed ...$speakerParams): static
-    {
-        if ($this->isRunning()) {
-            $this->setSpeakerParameters($speakerParams);
-        }
-        else {
-            $this->doSpeak(...$speakerParams);
-        }
-
-        return $this;
-    }
-
     public function speak(mixed ...$speakerParams): static
     {
         if ($this->isRunning()) {
