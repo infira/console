@@ -2,29 +2,109 @@
 
 namespace Infira\Console;
 
-use Infira\Console\Output\ConsoleOutput;
-
 class Process extends \Symfony\Component\Process\Process
 {
     /**
      * @var callable|null
      */
     private $speaker;
-    private ConsoleOutput $console;
+    private array $speakerParameters = [];
+    private ?string $task;
+    private bool $failed = false;
+    private bool $voidRunError = false;
 
-    public function setConsoleOutput(ConsoleOutput $console): static
+    public function setAsFailed(): static
     {
-        $this->console = $console;
+        $this->failed = true;
+
+        return $this;
+    }
+
+    public function isSuccessful(): bool
+    {
+        if ($this->failed) {
+            return false;
+        }
+        if (!parent::isSuccessful()) {
+            return false;
+        }
+
+        return true;
+    }
+
+    public function withTask(string $task = null): static
+    {
+        $this->task = $task;
+
+        return $this;
+    }
+
+    public function runTask(string $task = null): static
+    {
+        $this->task = $task;
+        if ($task) {
+            $this->speak("task <info>$task</info> is running ....");
+        }
+        $this->run();
+
+
+        return $this;
+    }
+
+    public function voidRunError(): static
+    {
+        $this->voidRunError = true;
+
+        return $this;
+    }
+
+    public function canDisplayErrors(): bool
+    {
+        return !$this->voidRunError;
+    }
+
+    public function getTask(): ?string
+    {
+        return $this->task ?? null;
+    }
+
+    public function speakOld(mixed ...$speakerParams): static
+    {
+        if ($this->isRunning()) {
+            $this->setSpeakerParameters($speakerParams);
+        }
+        else {
+            $this->doSpeak(...$speakerParams);
+        }
 
         return $this;
     }
 
     public function speak(mixed ...$speakerParams): static
     {
-        $speaker = $this->speaker ?: fn($line) => $this->console->writeEachLine($line);
-        $this->run(fn($type, $line) => $speaker($line, ...$speakerParams));
+        if ($this->isRunning()) {
+            $this->setSpeakerParameters($speakerParams);
+        }
+        else {
+            $this->doSpeak(...$speakerParams);
+        }
 
         return $this;
+    }
+
+    public function speakDone(string $message = '<fg=black;bg=green>    DONE    </>'): static
+    {
+        return $this->speak($message);
+    }
+
+    public function speakFailedStatus(string $message = '<error>Failed with status: {status}</error>'): static
+    {
+        return $this->speakStatus($message);
+    }
+
+    public function speakStatus(string $message = '{status}'): static
+    {
+        return $this->speak(flu($message)->render(['status' => $this->getStatus()]));
     }
 
     public function setSpeaker(callable $speaker): static
@@ -34,10 +114,36 @@ class Process extends \Symfony\Component\Process\Process
         return $this;
     }
 
-    public function getOutput(): string
+    public function setSpeakerParameters(mixed ...$arguments): static
     {
-        $this->run();
+        $this->speakerParameters = $arguments;
 
-        return parent::getOutput();
+        return $this;
     }
+
+
+    //region abstractions
+    protected function buildCallback(callable $callback = null): \Closure
+    {
+        //debug(['$callback' => $callback]);
+        if ($callback === null) {
+            //debug(['$this->speaker' => isset($this->speaker)]);
+            if (isset($this->speaker)) {
+                $callback = fn($type, $line) => $this->doSpeak($type, $line, ...$this->speakerParameters);
+            }
+        }
+
+        return parent::buildCallback($callback);
+    }
+
+    protected function doSpeak(mixed ...$params)
+    {
+        if (!isset($this->speaker)) {
+            throw new \RuntimeException('Speaker is not set');
+        }
+
+        return ($this->speaker)(...$params);
+    }
+    //endregion
+
 }
