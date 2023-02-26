@@ -96,7 +96,7 @@ class Bin
                     $output->dumpArray($extra);
                 }
                 if ($stack->trace) {
-                    $output->miniRegion('trace', static fn() => $output->dumpTrace($stack->trace, self::$options['traceFormatter'] ?? null));
+                    $output->miniRegion('trace', static fn() => $output->dumpTrace($stack->trace, self::$options['traceFormatter'] ?? null), null);
                 }
             }
             else {
