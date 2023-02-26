@@ -79,7 +79,9 @@ class Process extends \Symfony\Component\Process\Process
             $message = new ProcessMessage($message, $this);
         }
 
-        return ($this->speaker)($message, ...$extraSpeakerParams);
+        ($this->speaker)($message, ...$extraSpeakerParams);
+
+        return $this;
     }
 
     public function speakDone(string $message = '<fg=black;bg=green>    DONE    </>'): static
