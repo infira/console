@@ -2,8 +2,16 @@
 
 namespace Infira\Console\Machine;
 
+use Illuminate\Config\Repository;
+use Infira\Console\Output\ConsoleOutput;
+
 class LocalHost extends MachineInstance
 {
+    public function __construct(ConsoleOutput $console, Repository|array $config = [], string $name = 'localhost')
+    {
+        parent::__construct($console, $config, $name);
+    }
+
     public function getProcessCommand(string|array $command, array $options = []): string
     {
         $commandString = implode(PHP_EOL, (array)$command);
