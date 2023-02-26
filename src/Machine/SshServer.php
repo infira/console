@@ -15,9 +15,7 @@ class SshServer extends MachineInstance
     public function __construct(ConsoleOutput $console, array|Repository $config = [], LocalHost $local = null, string $name = 'sshServer')
     {
         parent::__construct($console, $config, $name);
-        if ($local === null) {
-            $this->local = new LocalHost($console, [], "$name.local");
-        }
+        $this->local = $local ?: new LocalHost($console, [], "$name.local");
     }
 
     /**
