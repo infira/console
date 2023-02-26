@@ -2,13 +2,14 @@
 
 namespace Infira\Console;
 
+use Infira\Console\Helper\ProcessMessage;
+
 class Process extends \Symfony\Component\Process\Process
 {
     /**
      * @var callable|null
      */
     private $speaker;
-    private array $speakerParameters = [];
     private ?string $task;
     private bool $failed = false;
     private bool $voidRunError = false;
@@ -68,16 +69,17 @@ class Process extends \Symfony\Component\Process\Process
         return $this->task ?? null;
     }
 
-    public function speak(mixed ...$speakerParams): static
+    public function speak(string|ProcessMessage $message, mixed ...$extraSpeakerParams): static
     {
-        if ($this->isRunning()) {
-            $this->setSpeakerParameters($speakerParams);
-        }
-        else {
-            $this->doSpeak(...$speakerParams);
+        if (!isset($this->speaker)) {
+            return $this;
         }
 
-        return $this;
+        if (is_string($message)) {
+            $message = new ProcessMessage($message, $this);
+        }
+
+        return ($this->speaker)($message, ...$extraSpeakerParams);
     }
 
     public function speakDone(string $message = '<fg=black;bg=green>    DONE    </>'): static
@@ -92,19 +94,18 @@ class Process extends \Symfony\Component\Process\Process
 
     public function speakStatus(string $message = '{status}'): static
     {
-        return $this->speak(flu($message)->render(['status' => $this->getStatus()]));
+        return $this->speak(str_replace('{status}', $this->getStatus(), $message));
     }
 
+    /**
+     * @template TProcessMessage
+     * @template TExtraParams
+     * @param  callable<TProcessMessage,<TExtraParams>>  $speaker
+     * @return $this
+     */
     public function setSpeaker(callable $speaker): static
     {
         $this->speaker = $speaker;
-
-        return $this;
-    }
-
-    public function setSpeakerParameters(mixed ...$arguments): static
-    {
-        $this->speakerParameters = $arguments;
 
         return $this;
     }
@@ -113,24 +114,11 @@ class Process extends \Symfony\Component\Process\Process
     //region abstractions
     protected function buildCallback(callable $callback = null): \Closure
     {
-        //debug(['$callback' => $callback]);
-        if ($callback === null) {
-            //debug(['$this->speaker' => isset($this->speaker)]);
-            if (isset($this->speaker)) {
-                $callback = fn($type, $line) => $this->doSpeak($type, $line, ...$this->speakerParameters);
-            }
+        if (($callback === null) && isset($this->speaker)) {
+            $callback = fn($type, $line) => $this->speak(ProcessMessage::makeRuntime($type, $line, $this));
         }
 
         return parent::buildCallback($callback);
-    }
-
-    protected function doSpeak(mixed ...$params)
-    {
-        if (!isset($this->speaker)) {
-            throw new \RuntimeException('Speaker is not set');
-        }
-
-        return ($this->speaker)(...$params);
     }
     //endregion
 
