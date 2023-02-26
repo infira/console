@@ -16,7 +16,7 @@ abstract class MachineInstance
     private string $name;
     public Repository $config;
 
-    public function __construct(string $name, protected ConsoleOutput $console, array|Repository $config = [])
+    public function __construct(protected ConsoleOutput $console, array|Repository $config = [], string $name = 'machine')
     {
         $this->name = $name;
         //black, red, green, yellow, blue, magenta, cyan, white, default, gray, bright-red, bright-green, bright-yellow, bright-blue, bright-magenta, bright-cyan, bright-white

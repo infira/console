@@ -11,7 +11,7 @@ class DockerImage extends MachineInstance
 {
     public function __construct(ConsoleOutput $console, array|Repository $config = [], string $name = 'docker')
     {
-        parent::__construct($name, $console, $config);
+        parent::__construct($console, $config, $name);
     }
 
     private function prepareMysqlCommand(string $extra = ''): string
