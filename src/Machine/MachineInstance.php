@@ -4,7 +4,7 @@ namespace Infira\Console\Machine;
 
 use Illuminate\Config\Repository;
 use Infira\Console\Helper\ProcessMessage;
-use Infira\Console\Output\ConsoleOutput;
+use Infira\Console\Output\Console;
 use Infira\Console\Process;
 use Symfony\Component\Console\Formatter\OutputFormatterStyle;
 use Wolo\File\FileHandler;
@@ -16,7 +16,7 @@ abstract class MachineInstance
     private string $name;
     public Repository $config;
 
-    public function __construct(protected ConsoleOutput $console, array|Repository $config = [], string $name = 'machine')
+    public function __construct(protected Console $console, array|Repository $config = [], string $name = 'machine')
     {
         $this->name = $name;
         //black, red, green, yellow, blue, magenta, cyan, white, default, gray, bright-red, bright-green, bright-yellow, bright-blue, bright-magenta, bright-cyan, bright-white

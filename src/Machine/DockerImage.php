@@ -3,13 +3,13 @@
 namespace Infira\Console\Machine;
 
 use Illuminate\Config\Repository;
-use Infira\Console\Output\ConsoleOutput;
+use Infira\Console\Output\Console;
 use Infira\Console\Process;
 use Wolo\File\FileHandler;
 
 class DockerImage extends MachineInstance
 {
-    public function __construct(ConsoleOutput $console, array|Repository $config = [], string $name = 'docker')
+    public function __construct(Console $console, array|Repository $config = [], string $name = 'docker')
     {
         parent::__construct($console, $config, $name);
     }

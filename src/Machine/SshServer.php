@@ -3,7 +3,7 @@
 namespace Infira\Console\Machine;
 
 use Illuminate\Config\Repository;
-use Infira\Console\Output\ConsoleOutput;
+use Infira\Console\Output\Console;
 use Infira\Console\Process;
 use Spatie\Ssh\Ssh;
 use Wolo\File\FileHandler;
@@ -12,7 +12,7 @@ class SshServer extends MachineInstance
 {
     private LocalHost $local;
 
-    public function __construct(ConsoleOutput $console, array|Repository $config = [], LocalHost $local = null, string $name = 'sshServer')
+    public function __construct(Console $console, array|Repository $config = [], LocalHost $local = null, string $name = 'sshServer')
     {
         parent::__construct($console, $config, $name);
         $this->local = $local ?: new LocalHost($console, [], "$name.local");

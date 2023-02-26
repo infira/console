@@ -8,20 +8,19 @@ use Symfony\Component\Console\Formatter\OutputFormatterInterface;
 use Symfony\Component\Console\Formatter\OutputFormatterStyle;
 use Symfony\Component\Console\Helper\FormatterHelper;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Output\ConsoleOutput;
 use Symfony\Component\Console\Output\ConsoleSectionOutput;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Wolo\VarDumper;
 
-class ConsoleOutput extends \Symfony\Component\Console\Output\ConsoleOutput
+class Console extends ConsoleOutput
 {
+    use Traits\ConsoleRegion;
+
     public SymfonyStyle $style;
     public Cursor $cursor;
-    private array $consoleRegionSections = [];
-    /**
-     * @var ConsoleOutputWrapper[]
-     */
-    private array $regions = [];
+    private array $memorySections = [];
 
     public function __construct(InputInterface $input, int $verbosity = OutputInterface::VERBOSITY_NORMAL, bool $decorated = null, OutputFormatterInterface $formatter = null)
     {
@@ -41,44 +40,6 @@ class ConsoleOutput extends \Symfony\Component\Console\Output\ConsoleOutput
         $formatter = new FormatterHelper();
         $formattedLine = $formatter->formatSection($section, $message, $style);
         $this->writeln($formattedLine);
-
-        return $this;
-    }
-
-    /**
-     * @param  string  $title
-     * @param  callable  $process  - while region is open every output send to console will be caught
-     * @param  int|null  $maxItems
-     * @return $this
-     */
-    public function region(string $title, callable $process, int $maxItems = null): static
-    {
-        $eq = str_repeat("=", 25);
-        $this->addWrapper(
-            "<comment>$eq".'['."<question> $title </question>".']'."$eq</comment>",
-            $maxItems
-        );
-        $process();
-        $this->popWrapper();
-
-        return $this;
-    }
-
-    /**
-     * @param  string  $title
-     * @param  callable  $process  - while region is open every output send to console will be caught
-     * @param  int|null  $maxItems
-     * @return $this
-     */
-    public function miniRegion(string $title, callable $process, int $maxItems = null): static
-    {
-        $eq = str_repeat('-', 25);
-        $this->addWrapper(
-            "<fg=magenta>$eq</>".'['." $title ".']'."<fg=magenta>$eq</>",
-            $maxItems
-        );
-        $process();
-        $this->popWrapper();
 
         return $this;
     }
@@ -207,7 +168,7 @@ class ConsoleOutput extends \Symfony\Component\Console\Output\ConsoleOutput
 
     private function createMemorySection(): ConsoleSectionOutput
     {
-        return new ConsoleSectionOutput(fopen('php://memory', 'wb', false), $this->consoleRegionSections, $this->getVerbosity(), $this->isDecorated(), $this->getFormatter());
+        return new ConsoleSectionOutput(fopen('php://memory', 'wb', false), $this->memorySections, $this->getVerbosity(), $this->isDecorated(), $this->getFormatter());
     }
 
     private function popWrapper(): void

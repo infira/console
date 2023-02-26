@@ -2,12 +2,13 @@
 
 namespace Infira\Console;
 
-use Infira\Console\Output\ConsoleOutput;
+use Infira\Console\Output\Console;
 use Infira\Error\Handler;
 use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Input\ArgvInput;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\ConsoleOutputInterface;
+use Wolo\VarDumper;
 
 class Bin
 {
@@ -49,8 +50,8 @@ class Bin
                 if (!isset($input)) {
                     $input = new ArgvInput();
                 }
-                Console::$output = new $type($input);
-                $middlewareArguments[] = Console::$output;
+                $output = new $type($input);
+                $middlewareArguments[] = $output;
             }
             else {
                 throw new \RuntimeException("Unknown type('$type')");
@@ -65,34 +66,54 @@ class Bin
                 $input = new ArgvInput();
             }
 
-            if (!isset(Console::$output)) {
-                Console::$output = new ConsoleOutput($input);
+            if (!isset($output)) {
+                $output = new Console($input);
             }
 
             $middleware(...$middlewareArguments);
             $app->setCatchExceptions(false);
             $app->setAutoExit(false);
 
-            return $app->run($input, Console::$output);
+            return $app->run($input, $output);
         }
         catch (\Throwable $e) {
             $stack = Handler::compile($e);
-            Console::$output->error($e->getMessage());
-            $extra = $stack->toArray();
-            if ($extra) {
-                $extra = array_filter($extra, static function ($item, $key) {
-                    if (in_array($key, ['trace', 'server'])) {
-                        return false;
-                    }
+            $extra = array_filter($stack->toArray(), static function ($item, $key) {
+                if (in_array($key, ['trace', 'server'])) {
+                    return false;
+                }
 
-                    return true;
-                }, ARRAY_FILTER_USE_BOTH);
-                Console::dumpArray($extra);
+                return true;
+            }, ARRAY_FILTER_USE_BOTH);
+
+            /**
+             * @var Console
+             */
+            if (isset($output)) {
+                $output->error($e->getMessage());
+
+                if ($extra) {
+                    $output->dumpArray($extra);
+                }
+                if ($stack->trace) {
+                    $output->miniRegion('trace', static fn() => $output->dumpTrace($stack->trace, self::$options['traceFormatter'] ?? null));
+                }
             }
-            if ($stack->trace) {
-                Console::miniRegion('trace', static function () use ($stack) {
-                    Console::dumpTrace($stack->trace, self::$options['traceFormatter'] ?? null);
-                });
+            else {
+                VarDumper::console(['error' => $e->getMessage()]);
+                if ($extra) {
+                    VarDumper::console(['extra' => $extra]);
+                }
+                if ($stack->trace) {
+                    $stack->trace = array_map(static function ($row) {
+                        if (isset(self::$options['traceFormatter'])) {
+                            return (self::$options['traceFormatter'])($row);
+                        }
+
+                        return $row;
+                    }, $stack->trace);
+                    VarDumper::console(['extra' => $stack->trace]);
+                }
             }
             exit;
         }

@@ -3,11 +3,11 @@
 namespace Infira\Console\Machine;
 
 use Illuminate\Config\Repository;
-use Infira\Console\Output\ConsoleOutput;
+use Infira\Console\Output\Console;
 
 class LocalHost extends MachineInstance
 {
-    public function __construct(ConsoleOutput $console, Repository|array $config = [], string $name = 'localhost')
+    public function __construct(Console $console, Repository|array $config = [], string $name = 'localhost')
     {
         parent::__construct($console, $config, $name);
     }
