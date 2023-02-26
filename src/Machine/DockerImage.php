@@ -49,7 +49,7 @@ class DockerImage extends MachineInstance
         return implode(
             ' && ',
             array_map(
-                static fn(string $cmd) => $this->getExecuteCommand($cmd),
+                fn(string $cmd) => $this->getExecuteCommand($cmd),
                 (array)$command
             )
         );
