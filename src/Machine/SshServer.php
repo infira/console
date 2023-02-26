@@ -75,7 +75,9 @@ class SshServer extends MachineInstance
      */
     public function ssh(): Ssh
     {
-        return Ssh::create($this->getConfig('user'), $this->getConfig('host'), $this->getConfig('host'));
+        $port = $this->config->has('port') ? (int)$this->config->get('port') : null;
+
+        return Ssh::create($this->getConfig('user'), $this->getConfig('host'), $port);
     }
 
     public function getProcessCommand(string|array $command, array $options = []): string
