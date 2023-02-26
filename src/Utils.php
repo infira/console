@@ -10,7 +10,7 @@ class Utils
             $message = implode("\n", $message);
         }
         foreach (preg_split('/\r\n|\r|\n/', trim($message)) as $line) {
-            $callback($line);
+            $callback(trim($line));
         }
     }
 }
