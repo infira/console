@@ -36,7 +36,7 @@ abstract class Command extends \Symfony\Component\Console\Command\Command
     protected function configure(): void
     {
         parent::configure();
-        $this->addOption('region-max-lines', null, InputOption::VALUE_REQUIRED);
+        $this->addOption('region-max-items', null, InputOption::VALUE_REQUIRED);
     }
 
     protected function success(): int
@@ -46,8 +46,8 @@ abstract class Command extends \Symfony\Component\Console\Command\Command
 
     protected function configureExecute()
     {
-        if ($this->input->hasOption('region-max-lines')) {
-            $this->console->setRegionMaxItems($this->input->getOption('region-max-lines'));
+        if ($this->input->hasOption('region-max-items')) {
+            $this->console->setRegionMaxItems($this->input->getOption('region-max-items'));
         }
     }
 

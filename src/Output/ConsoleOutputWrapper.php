@@ -37,7 +37,7 @@ class ConsoleOutputWrapper
         $this->section->clear();
         $this->section->writeln($this->wrap, true);
         $this->nl();
-        if ($this->maxItems !== null && count($this->messages) >= $this->maxItems) {
+        if ($this->maxItems !== null && count($this->messages) > $this->maxItems) {
             array_shift($this->messages);
         }
         $firstKey = array_key_first($this->messages);
