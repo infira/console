@@ -72,16 +72,21 @@ abstract class MachineInstance
 
     public function tmpPath(string ...$path): string
     {
-        if (!$this->config->has('tmpPath')) {
-            throw new MachineMissingConfigException('"tmpPath" is not defined');
-        }
-
-        return Path::join($this->config->get('tmpPath'), ...$path);
+        return Path::join($this->getConfig('tmpPath'), ...$path);
     }
 
     public function tmpFile(string ...$path): FileHandler
     {
         return new FileHandler($this->tmpPath(...$path));
+    }
+
+    protected function getConfig(string $name): mixed
+    {
+        if (!$this->config->has($name)) {
+            throw new MachineMissingConfigException("config('$name') is not defined");
+        }
+
+        return $this->config->get($name);
     }
 
     abstract public function getProcessCommand(string|array $command, array $options = []): string;
