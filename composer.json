@@ -18,7 +18,7 @@
     "symfony/console": "v6.2.5",
     "symfony/process": "v6.2.5",
     "infira/errorhandler": "^v2.1",
-    "infira/wolo": "~v1.1.1",
+    "infira/wolo": "~1",
     "illuminate/config": "^v9",
     "spatie/ssh": "1.8.2"
   }
