@@ -6,7 +6,7 @@
       "Infira\\Console\\": "src/"
     }
   },
-  "minimum-stability": "dev",
+  "minimum-stability": "stable",
   "authors": [
     {
       "name": "Gen Taliar",
