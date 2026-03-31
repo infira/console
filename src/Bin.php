@@ -42,11 +42,11 @@ class Bin
                 $input = new $type();
                 $middlewareArguments[] = $input;
             }
-            elseif (is_a($type, Application::class, true)) {
+            else if (is_a($type, Application::class, true)) {
                 $app = new $type($appName);
                 $middlewareArguments[] = $app;
             }
-            elseif (is_a($type, ConsoleOutputInterface::class, true)) {
+            else if (is_a($type, ConsoleOutputInterface::class, true)) {
                 if (!isset($input)) {
                     $input = new ArgvInput();
                 }
@@ -86,6 +86,8 @@ class Bin
                 return true;
             }, ARRAY_FILTER_USE_BOTH);
 
+            $trace = $stack->data['trace'] ?? [];
+
             /**
              * @var Console
              */
@@ -95,8 +97,8 @@ class Bin
                 if ($extra) {
                     $output->dumpArray($extra);
                 }
-                if ($stack->trace) {
-                    $output->miniRegion('trace', static fn() => $output->dumpTrace($stack->trace, self::$options['traceFormatter'] ?? null), null);
+                if ($trace) {
+                    $output->miniRegion('trace', static fn() => $output->dumpTrace($trace, self::$options['traceFormatter'] ?? null), null);
                 }
             }
             else {
@@ -104,15 +106,15 @@ class Bin
                 if ($extra) {
                     VarDumper::console(['extra' => $extra]);
                 }
-                if ($stack->trace) {
-                    $stack->trace = array_map(static function ($row) {
+                if ($trace) {
+                    $trace = array_map(static function ($row) {
                         if (isset(self::$options['traceFormatter'])) {
                             return (self::$options['traceFormatter'])($row);
                         }
 
                         return $row;
-                    }, $stack->trace);
-                    VarDumper::console(['extra' => $stack->trace]);
+                    }, $trace);
+                    VarDumper::console(['extra' => $trace]);
                 }
             }
             exit;
