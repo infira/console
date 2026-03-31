@@ -12,7 +12,7 @@ class SshServer extends MachineInstance
 {
     private LocalHost $local;
 
-    public function __construct(Console $console, array|Repository $config = [], LocalHost $local = null, string $name = 'sshServer')
+    public function __construct(Console $console, array|Repository $config = [], ?LocalHost $local = null, string $name = 'sshServer')
     {
         parent::__construct($console, $config, $name);
         $this->local = $local ?: new LocalHost($console, [], "$name.local");
@@ -59,7 +59,7 @@ class SshServer extends MachineInstance
         $this->execute($commands);
     }
 
-    public function execute(array|string $commands, string $taskName = null): Process
+    public function execute(array|string $commands, ?string $taskName = null): Process
     {
         $process = $this->process($commands);
         $process->withTask($taskName);

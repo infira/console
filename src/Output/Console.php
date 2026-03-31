@@ -22,7 +22,7 @@ class Console extends ConsoleOutput
     public Cursor $cursor;
     private array $memorySections = [];
 
-    public function __construct(InputInterface $input, int $verbosity = OutputInterface::VERBOSITY_NORMAL, bool $decorated = null, OutputFormatterInterface $formatter = null)
+    public function __construct(InputInterface $input, int $verbosity = OutputInterface::VERBOSITY_NORMAL, ?bool $decorated = null, ?OutputFormatterInterface $formatter = null)
     {
         parent::__construct(
             $verbosity,
@@ -68,10 +68,10 @@ class Console extends ConsoleOutput
     /**
      * @template TTraceItem
      * @param  array  $trace
-     * @param  callable<TTraceItem>|null  $formatter
+     * @param callable<TTraceItem>|null $formatter
      * @return void
      */
-    public function dumpTrace(array $trace, callable $formatter = null): void
+    public function dumpTrace(array $trace, ?callable $formatter = null): void
     {
         foreach ($trace as $key => $row) {
             $key++;
@@ -147,7 +147,7 @@ class Console extends ConsoleOutput
     //endregion
 
     //region wrapping console outputs
-    public function createWrapper(string $wrap, bool $useMemory = false, int $maxItems = null): ConsoleOutputWrapper
+    public function createWrapper(string $wrap, bool $useMemory = false, ?int $maxItems = null): ConsoleOutputWrapper
     {
         return new ConsoleOutputWrapper(
             $wrap,
@@ -156,7 +156,7 @@ class Console extends ConsoleOutput
         );
     }
 
-    private function addWrapper(string $wrap, int $maxItems = null): void
+    private function addWrapper(string $wrap, ?int $maxItems = null): void
     {
         $isFirst = count($this->regions) === 0;
         $this->regions[] = $this->createWrapper(

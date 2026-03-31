@@ -33,14 +33,14 @@ class Process extends \Symfony\Component\Process\Process
         return true;
     }
 
-    public function withTask(string $task = null): static
+    public function withTask(?string $task = null): static
     {
         $this->task = $task;
 
         return $this;
     }
 
-    public function runTask(string $task = null): static
+    public function runTask(?string $task = null): static
     {
         $this->task = $task;
         if ($task) {
@@ -114,7 +114,7 @@ class Process extends \Symfony\Component\Process\Process
 
 
     //region abstractions
-    protected function buildCallback(callable $callback = null): \Closure
+    protected function buildCallback(?callable $callback = null): \Closure
     {
         if (($callback === null) && isset($this->speaker)) {
             $callback = fn($type, $line) => $this->speak(ProcessMessage::makeRuntime($type, $line, $this));

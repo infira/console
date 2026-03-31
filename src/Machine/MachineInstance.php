@@ -30,7 +30,7 @@ abstract class MachineInstance
         $this->console->miniRegion($title, $between);
     }
 
-    public function process(string|array $commands, string $cwd = null, array $env = null, mixed $input = null, ?float $timeout = 60): Process
+    public function process(string|array $commands, ?string $cwd = null, ?array $env = null, mixed $input = null, ?float $timeout = 60): Process
     {
         return Process::fromShellCommandline(
             $this->getProcessCommand($commands),

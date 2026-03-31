@@ -14,12 +14,12 @@
     }
   ],
   "require": {
-    "php": ">=8.0.2",
-    "symfony/console": "v6.2.5",
-    "symfony/process": "v6.2.5",
-    "infira/errorhandler": "^v2.1",
+    "php": "^8.4",
+    "symfony/console": "^v8",
+    "symfony/process": "^8",
+    "infira/errorhandler": "^v3",
     "infira/wolo": "v1.2.1",
     "illuminate/config": "v10.49.0",
-    "spatie/ssh": "1.8.2"
+    "spatie/ssh": "^1"
   }
 }

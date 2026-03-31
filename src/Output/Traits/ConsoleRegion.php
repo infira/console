@@ -19,10 +19,10 @@ trait ConsoleRegion
     /**
      * @param  string  $title
      * @param  callable  $process  - while region is open every output send to console will be caught
-     * @param  int|null  $maxItems
+     * @param int|null $maxItems
      * @return $this
      */
-    public function region(string $title, callable $process, int $maxItems = null): static
+    public function region(string $title, callable $process, ?int $maxItems = null): static
     {
         if (func_num_args() === 2) {
             $maxItems = $this->getRegionMaxItems();
@@ -42,10 +42,10 @@ trait ConsoleRegion
     /**
      * @param  string  $title
      * @param  callable  $process  - while region is open every output send to console will be caught
-     * @param  int|null  $maxItems
+     * @param int|null $maxItems
      * @return $this
      */
-    public function miniRegion(string $title, callable $process, int $maxItems = null): static
+    public function miniRegion(string $title, callable $process, ?int $maxItems = null): static
     {
         if (func_num_args() === 2) {
             $maxItems = $this->getRegionMaxItems();
