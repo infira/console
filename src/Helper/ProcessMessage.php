@@ -9,17 +9,7 @@ use Symfony\Component\Process\Process as SymfonyProcess;
 
 class ProcessMessage implements Stringable
 {
-    private ?string $stdOutType = null;
-    private bool $isRunning = false;
-
-    public function __construct(public string $message, public Process $process) {}
-
-    public static function makeRuntime(string $type, string $message, Process $process): static
-    {
-        return (new static($message, $process))
-            ->setRuntime(true)
-            ->setRuntimeOutType($type);
-    }
+    public function __construct(public string $message, public Process $process, private ?string $stdOutType = null) {}
 
     public function setProcess(Process $process): static
     {
@@ -38,7 +28,6 @@ class ProcessMessage implements Stringable
         return $this->message;
     }
 
-
     /**
      * @return string|null SymfonyProcess::OUT || SymfonyProcess::ERR
      */
@@ -56,24 +45,11 @@ class ProcessMessage implements Stringable
 
     public function isRuntimeError(): bool
     {
+        if ($this->process->isExitCodeSuccess()) {
+            return false;
+        }
+
         return $this->stdOutType === SymfonyProcess::ERR;
-    }
-
-    /**
-     * Was message constructed in while process is running
-     *
-     * @return bool
-     */
-    public function isRuntime(): bool
-    {
-        return $this->isRunning;
-    }
-
-    public function setRuntime(bool $bool): static
-    {
-        $this->isRunning = $bool;
-
-        return $this;
     }
 
     /**

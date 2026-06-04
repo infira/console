@@ -3,6 +3,7 @@
 namespace Infira\Console;
 
 use Infira\Console\Helper\ProcessMessage;
+use Infira\Console\Output\Console;
 
 class Process extends \Symfony\Component\Process\Process
 {
@@ -10,9 +11,35 @@ class Process extends \Symfony\Component\Process\Process
      * @var callable|null
      */
     private $speaker;
-    private ?string $task;
+    private ?string $task = null;
+    private ?string $name = null;
     private bool $failed = false;
-    private bool $voidRunError = false;
+    private bool $voidDisplayRuntimeErrors = false;
+    private Console $console;
+    private array $voidExitCodesAsErrors = [];
+
+    /**
+     * @param Console $console
+     * @return $this
+     */
+    public function setConsole(Console $console): static
+    {
+        $this->console = $console;
+
+        return $this;
+    }
+
+    public function getName(): ?string
+    {
+        return $this->name ?: null;
+    }
+
+    public function name(string $name): static
+    {
+        $this->name = $name;
+
+        return $this;
+    }
 
     public function setAsFailed(): static
     {
@@ -23,14 +50,42 @@ class Process extends \Symfony\Component\Process\Process
 
     public function isSuccessful(): bool
     {
-        if ($this->failed) {
-            return false;
+        if ($this->isExitCodeSuccess()) {
+            return true;
         }
-        if (!parent::isSuccessful()) {
+
+        if ($this->failed) {
             return false;
         }
 
         return true;
+    }
+
+    public function isFailed(): bool
+    {
+        // $this->console->dumpArray([
+        //     'status' => $this->getStatus(),
+        //     'exit_code' => $this->getExitCode(),
+        //     'voidExitCodesAsErrors' => $this->voidExitCodesAsErrors,
+        //     'isExitCodeSuccess' => $this->isExitCodeSuccess(),
+        //     'isSuccessful' => $this->isSuccessful(),
+        //     'failed' => (int)$this->failed,
+        //     'in_array' => in_array($this->getExitCode(), $this->voidExitCodesAsErrors, true),
+        // ]);
+        return !$this->isSuccessful();
+    }
+
+    public function isExitCodeSuccess(): bool
+    {
+        $exitCode = $this->getExitCode();
+        if ($exitCode === 0) {
+            return true;
+        }
+        if (in_array($exitCode, $this->voidExitCodesAsErrors, true)) {
+            return true;
+        }
+
+        return false;
     }
 
     public function withTask(?string $task = null): static
@@ -48,20 +103,26 @@ class Process extends \Symfony\Component\Process\Process
         }
         $this->run();
 
+        return $this;
+    }
+
+    public function voidDIsplayRuntimeErrors(): static
+    {
+        $this->voidDisplayRuntimeErrors = true;
 
         return $this;
     }
 
-    public function voidRunError(): static
+    public function voidExitCodesAsErrors(array|int $codes): static
     {
-        $this->voidRunError = true;
+        array_push($this->voidExitCodesAsErrors, ...((array)$codes));
 
         return $this;
     }
 
-    public function canDisplayErrors(): bool
+    public function canDisplayRuntimeErrors(): bool
     {
-        return !$this->voidRunError;
+        return !$this->voidDisplayRuntimeErrors;
     }
 
     public function getTask(): ?string
@@ -102,7 +163,7 @@ class Process extends \Symfony\Component\Process\Process
     /**
      * @template TProcessMessage
      * @template TExtraParams
-     * @param  callable<TProcessMessage,<TExtraParams>>  $speaker
+     * @param callable<TProcessMessage,<TExtraParams>> $speaker
      * @return $this
      */
     public function setSpeaker(callable $speaker): static
@@ -112,12 +173,13 @@ class Process extends \Symfony\Component\Process\Process
         return $this;
     }
 
-
     //region abstractions
     protected function buildCallback(?callable $callback = null): \Closure
     {
         if (($callback === null) && isset($this->speaker)) {
-            $callback = fn($type, $line) => $this->speak(ProcessMessage::makeRuntime($type, $line, $this));
+            $callback = fn($type, $line) => $this->speak(
+                new ProcessMessage($line, $this, $type)
+            );
         }
 
         return parent::buildCallback($callback);

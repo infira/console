@@ -2,46 +2,45 @@
 
 namespace Infira\Console\Machine;
 
-use Illuminate\Config\Repository;
-use Infira\Console\Output\Console;
+use Infira\Console\Machine\Config\DockerImageConfig;
 use Infira\Console\Process;
+use Infira\Klahvik\helper\Utils;
 use Wolo\File\FileHandler;
 
+/**
+ * @property-read DockerImageConfig $config
+ */
 class DockerImage extends MachineInstance
 {
-    public function __construct(Console $console, array|Repository $config = [], string $name = 'docker')
+    private function prepareSqlCommand(string $extra = ''): string
     {
-        parent::__construct($console, $config, $name);
+        return Utils::renderString(
+            "{command} -u{user} -p{password}{extra}",
+            [
+                'command' => $this->config->getSqlCommand(),
+                'user' => $this->config->getSqlRootUser(),
+                'password' => $this->config->getSqlRootPassword(),
+                'extra' => $extra ? " $extra" : '',
+            ]
+        );
     }
 
-    private function prepareMysqlCommand(string $extra = ''): string
-    {
-        return sprintf('mysql -uroot -p%s%s', $this->getConfig('mysqlRootPassword'), ($extra ? " $extra" : ''));
-    }
-
-    public function mysqlQuery(string|array $query): Process
+    public function sqlQuery(string|array $query): Process
     {
         return $this->process(
-            array_map(fn($q) => $this->prepareMysqlCommand('-e "'.$q.'"'),
+            array_map(fn($q) => $this->prepareSqlCommand('-e "'.$q.'"'),
                 (array)$query)
         );
     }
 
-    public function mysqlQueryFromFile(string $db, string|FileHandler|array $files): Process
+    public function sqlQueryFromFile(string $db, string|FileHandler|array $files): Process
     {
         return $this->process(
             array_map(
-                fn($sql) => $this->prepareMysqlCommand("$db < $sql"),
+                fn($sql) => $this->prepareSqlCommand("$db < $sql"),
                 (array)$files,
             )
         );
-    }
-
-    public function getExecuteCommand(string $command, array $options = []): string
-    {
-        $extraArgs = implode(' ', [$this->getConfig('image'), ...array_values($options)]);
-
-        return "docker exec -i $extraArgs $command";
     }
 
     public function getProcessCommand(string|array $command, array $options = []): string
@@ -49,21 +48,13 @@ class DockerImage extends MachineInstance
         return implode(
             ' && ',
             array_map(
-                fn(string $cmd) => $this->getExecuteCommand($cmd),
+                function (string $cmd) use ($options) {
+                    $extraArgs = implode(' ', [$this->config->getContainer(), ...array_values($options)]);
+
+                    return "docker exec -i $extraArgs $cmd";
+                },
                 (array)$command
             )
         );
-    }
-
-    public function execute(string|array $commands): string
-    {
-        $res = [];
-        foreach ((array)$commands as $cmd) {
-            $output = null;
-            exec($this->getExecuteCommand($cmd), $output);
-            $res[] = $output;
-        }
-
-        return implode("\n", $res);
     }
 }
