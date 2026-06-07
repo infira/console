@@ -19,7 +19,7 @@
     "symfony/process": "^8",
     "infira/errorhandler": "^v3",
     "infira/wolo": "@stable",
-    "illuminate/config": "v10.49.0",
+    "illuminate/config": "v11",
     "spatie/ssh": "^1"
   }
 }
